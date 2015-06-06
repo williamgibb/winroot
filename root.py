@@ -221,12 +221,13 @@ def process_worksheet(ws, exceptions_list=False):
     roots = []
     for row in root_data[1:]:
         if exceptions:
+            # noinspection PyUnusedLocal
             for i in exceptions:
-                # noinspection PyPep8Naming
+                # noinspection PyPep8Naming,PyUnusedLocal
                 rootName = row[root_index_data['RootName']]
-                # noinspection PyPep8Naming
+                # noinspection PyPep8Naming,PyUnusedLocal
                 rootLocation = row[root_index_data['Location#']]
-                # noinspection PyPep8Naming
+                # noinspection PyPep8Naming,PyUnusedLocal
                 rootSession = row[root_index_data['Sesssion#']]
                 #
                 # EXCEPTION ROOT HANDLING WOULD WOULD GO HERE
@@ -638,7 +639,7 @@ def root_options():
 
 
 if __name__ == "__main__":
-    parser = root_options()
-    options = parser.parse_args()
+    p = root_options()
+    opts = p.parse_args()
 
-    main(options)
+    main(opts)
