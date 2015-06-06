@@ -21,12 +21,12 @@ log = logging.getLogger(__name__)
 
 
 class Root(object):
-    def __init__(self, rootName, location, birthSession):
-        self.rootName = rootName
+    def __init__(self, rootname, location, birthsession):
+        self.rootName = rootname
         self.location = location
-        self.birthSession = birthSession
-        self.identity = (rootName, location, birthSession)
-        self.tipIdentity = (birthSession, location)
+        self.birthSession = birthsession
+        self.identity = (rootname, location, birthsession)
+        self.tipIdentity = (birthsession, location)
         self.tube = ''
         self.session = ''
         self.goneSession = ''
@@ -41,8 +41,8 @@ class Root(object):
 
 
 class Tube(object):
-    def __init__(self, tubeNumber):
-        self.tubeNumber = tubeNumber
+    def __init__(self, tubenumber):
+        self.tubeNumber = tubenumber
         self.roots = []
         self.maxSessionCount = 0
         self.tipStats = ''
@@ -146,38 +146,38 @@ def get_index_at_null(cell_list):
 ''' helper functions for finding the import values from the root data table'''
 
 
-def build_root_data_table(ws, rootIndexData):
+def build_root_data_table(ws, rootindexdata):
     """ BUILD A LIST OF DATA REPRESENTING EACH ROW IN WORKSHEET UP
     TO THE SYNTHESIS TABLE
     """
-    rootData = []
+    rootdata = []
     # get index values for each important column
-    tableHeader = ws.rows[0]
-    for key in rootIndexData:
-        index = get_index_by_value(tableHeader, key)
+    tableheader = ws.rows[0]
+    for key in rootindexdata:
+        index = get_index_by_value(tableheader, key)
         if not index:
             log.error('Failed to obtain header value: {}'.format(key))
             return False
-        rootIndexData[key] = index
-    endOfRootData = get_index_at_null(ws.columns[0])
-    if not endOfRootData:
+        rootindexdata[key] = index
+    endof_rootdata = get_index_at_null(ws.columns[0])
+    if not endof_rootdata:
         logging.error('Failed to find end of root data.')
         return False
     # this slice includes the header row in rootData.  This lets us
     # rebuild indices, since the dict iterator is not sorted
-    for row in ws.rows[:endOfRootData]:
-        rootRow = []
-        for key in rootIndexData:
-            value = row[rootIndexData[key]].value
-            rootRow.append(value)
-        rootData.append(rootRow)
-    return rootData
+    for row in ws.rows[:endof_rootdata]:
+        rootrow = []
+        for key in rootindexdata:
+            value = row[rootindexdata[key]].value
+            rootrow.append(value)
+        rootdata.append(rootrow)
+    return rootdata
 
 
 def process_worksheet(ws, exceptions_list=False):
     """Process a worksheet, and build a tube object containing all the root data.
     This data can then be dumped out when all tubes have been processed."""
-    rootIndexData = {
+    root_index_data = {
         'RootName': 0,
         'Location#': 0,
         'Session#': 0,
@@ -193,79 +193,82 @@ def process_worksheet(ws, exceptions_list=False):
     exceptions = None
     if exceptions_list:
         try:
-            exceptions = exceptions_list[tubeNumber]
+            exceptions = exceptions_list[tube_number]
         except KeyError:
-            log.exception('No exceptions list found for tube number: %s' % (str(tubeNumber)))
+            log.exception('No exceptions list found for tube number: %s' % (str(tube_number)))
     # basic information
-    tubeNumber = get_tube_number(ws)
-    tube = Tube(tubeNumber)
-    logging.debug('Processing Data for tube #: %s' % (str(tubeNumber)))
+    tube_number = get_tube_number(ws)
+    tube = Tube(tube_number)
+    logging.debug('Processing Data for tube #: %s' % (str(tube_number)))
     #
-    root_data = build_root_data_table(ws, rootIndexData)
+    root_data = build_root_data_table(ws, root_index_data)
     if not root_data:
         log.error('Failed to get root data from sheet: {}'.format(ws.title))
         return False
-    headerRow = root_data[0]
-    for key in rootIndexData:
+    header_row = root_data[0]
+    for key in root_index_data:
         try:
-            index = headerRow.index(key)
+            index = header_row.index(key)
         except ValueError:
             log.exception('Failed to obtain header value: {}'.format(key))
             return False
-        rootIndexData[key] = index
+        root_index_data[key] = index
     # this loop will not handle exceptional roots, it just builts a list of root 
     # object for each row of root data
     logging.debug('Building roots from root_data')
-    maxSessionCount = 1
-    sessionDates = {}
+    max_session_count = 1
+    session_dates = {}
     roots = []
     for row in root_data[1:]:
         if exceptions:
             for i in exceptions:
-                rootName = row[rootIndexData['RootName']]
-                rootLocation = row[rootIndexData['Location#']]
-                rootSession = row[rootIndexData['Sesssion#']]
+                # noinspection PyPep8Naming
+                rootName = row[root_index_data['RootName']]
+                # noinspection PyPep8Naming
+                rootLocation = row[root_index_data['Location#']]
+                # noinspection PyPep8Naming
+                rootSession = row[root_index_data['Sesssion#']]
                 #
                 # EXCEPTION ROOT HANDLING WOULD WOULD GO HERE
                 #
                 pass
-        root = root_from_row(row, rootIndexData)
+        root = root_from_row(row, root_index_data)
         roots.append(root)
         # process session statistics
-        if root.session > maxSessionCount:
-            maxSessionCount = root.session
-            logging.debug('MaxSessionCount updated to %s' % (str(maxSessionCount)))
-        if root.session not in sessionDates:
-            sessionDates[root.session] = row[rootIndexData['Date']]
-            logging.debug('Inserted session %s- Date %s ' % (str(root.session), sessionDates[root.session],))
+        if root.session > max_session_count:
+            max_session_count = root.session
+            logging.debug('MaxSessionCount updated to %s' % (str(max_session_count)))
+        if root.session not in session_dates:
+            session_dates[root.session] = row[root_index_data['Date']]
+            logging.debug('Inserted session %s- Date %s ' % (str(root.session), session_dates[root.session],))
     # no longer need to keep this data in memory
     del root_data
     # need to know what session value to use for finalizing root values.
-    tube.maxSessionCount = maxSessionCount
-    tube.sessionDates = sessionDates
+    tube.maxSessionCount = max_session_count
+    tube.sessionDates = session_dates
     # add each root to the tube
     logging.debug('Inserting roots')
-    finalRoots = []
+    final_roots = []
     for root in roots:
         tube.insert_or_update_root(root)
-        if root.session == maxSessionCount:
-            finalRoots.append(root)
+        if root.session == max_session_count:
+            final_roots.append(root)
     # finalize roots
     logging.debug('Finalizing roots')
-    for root in finalRoots:
+    for root in final_roots:
         status = tube.finalize_root(root)
         if not status:
             logging.error('Failed to finalize root %s' % (str(root.identity)))
             log.error(root.identity)
 
     # need to calculate alive/dead tip numbers
-    tipStats = tip_stats(tube)
+    tip_stats = tip_stats(tube)
     for r in tube.roots:
-        r.aliveTipsAtBirth = tipStats[r.tipIdentity]
+        r.aliveTipsAtBirth = tip_stats[r.tipIdentity]
         if r.goneSession:
-            goneIdentity = r.goneSession, r.location
-            r.aliveTipsAtGone = tipStats[goneIdentity]
-    tube.tipStats = tipStats
+            gone_identity = r.goneSession, r.location
+            r.aliveTipsAtGone = tip_stats[gone_identity]
+    tube.tipStats = tip_stats
 
     logging.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
     logging.debug('Found %s roots in tube' % (str(len(tube.roots))))
@@ -275,14 +278,14 @@ def process_worksheet(ws, exceptions_list=False):
 # tip stats code
 
 def calculate_alive_tip_stats(tube):
-    aliveTips = {}
+    alive_tips = {}
     for existingRoot in tube.roots:
-        tipID = existingRoot.tipIdentity
-        if tipID not in aliveTips:
-            aliveTips[tipID] = 1
+        tip_id = existingRoot.tipIdentity
+        if tip_id not in alive_tips:
+            alive_tips[tip_id] = 1
         else:
-            aliveTips[tipID] += 1
-    return aliveTips
+            alive_tips[tip_id] += 1
+    return alive_tips
 
 
 def calculate_gone_tip_stats(din, tube):
@@ -290,18 +293,18 @@ def calculate_gone_tip_stats(din, tube):
     for i, c in sorted(din.items()):
         for r in tube.roots:
             if (r.tipIdentity == i) and r.goneSession:
-                gI = r.goneSession, r.location
-                if gI not in d:
-                    d[gI] = -1
+                gi = r.goneSession, r.location
+                if gi not in d:
+                    d[gi] = -1
                 else:
-                    d[gI] -= 1
+                    d[gi] -= 1
     return d
 
 
 def tip_stats(tube):
     # get count of alive tips and the locations/sessions where roots die
-    aliveStats = calculate_alive_tip_stats(tube)
-    goneStats = calculate_gone_tip_stats(aliveStats, tube)
+    alive_stats = calculate_alive_tip_stats(tube)
+    gone_stats = calculate_gone_tip_stats(alive_stats, tube)
     # build a list of all root locations
     locations = []
     for r in tube.roots:
@@ -310,7 +313,7 @@ def tip_stats(tube):
     # build a mapping of sessions to lists of locations
     loc_sessions = {}
     for L in locations:
-        for k in aliveStats:
+        for k in alive_stats:
             sess, loc = k
             if L == loc:
                 if L not in loc_sessions:
@@ -318,7 +321,7 @@ def tip_stats(tube):
                 else:
                     loc_sessions[L].append(sess)
     for L in locations:
-        for k in goneStats:
+        for k in gone_stats:
             sess, loc = k
             if L == loc:
                 if L not in loc_sessions:
@@ -331,56 +334,56 @@ def tip_stats(tube):
         i.sort()
         loc_sessions[k] = i
     # sum the alive and dead roots over time
-    totalStats = {}
+    total_stats = {}
     for k in loc_sessions:
         temp = 0
         for sess in loc_sessions[k]:
             key = sess, k
-            if key in aliveStats:
-                temp = aliveStats[key] + temp
-            if key in goneStats:
-                temp = goneStats[key] + temp
-            totalStats[key] = temp
+            if key in alive_stats:
+                temp = alive_stats[key] + temp
+            if key in gone_stats:
+                temp = gone_stats[key] + temp
+            total_stats[key] = temp
     # return totalStats
-    return totalStats
+    return total_stats
 
 
 # root processing code
 
-def root_from_row(row, indexDict):
-    """ build a root object from row, using indexDict for mappings"""
+def root_from_row(row, indexdict):
+    """ build a root object from row, using indexdict for mappings"""
     # identification information
-    rootName = row[indexDict['RootName']]
-    location = row[indexDict['Location#']]
-    birthSession = row[indexDict['BirthSession']]
-    root = Root(rootName, location, birthSession)
+    root_name = row[indexdict['RootName']]
+    location = row[indexdict['Location#']]
+    birth_session = row[indexdict['BirthSession']]
+    root = Root(root_name, location, birth_session)
     # check to see if anomalous root
-    if row[indexDict['NumberOfTips']] == 1:
+    if row[indexdict['NumberOfTips']] == 1:
         root.anomaly = False
-        if row[indexDict['TipLivStatus']].startswith('A'):
+        if row[indexdict['TipLivStatus']].startswith('A'):
             root.isAlive = 'A'
-        if row[indexDict['TipLivStatus']].startswith('G'):
+        if row[indexdict['TipLivStatus']].startswith('G'):
             root.isAlive = 'G'
     else:
         root.anomaly = True
         root.isAlive = 'A'
     # root metadata
-    root.session = row[indexDict['Session#']]
+    root.session = row[indexdict['Session#']]
     if root.isAlive.startswith('G'):
         root.goneSession = root.session
     # order & diameter data
-    root.order = row[indexDict['RootNotes']]
-    root.avgDiameter = row[indexDict['TotAvgDiam(mm/10)']]
+    root.order = row[indexdict['RootNotes']]
+    root.avgDiameter = row[indexdict['TotAvgDiam(mm/10)']]
     return root
 
 
 def get_tube_number(ws):
     """ get tube number from a given worksheet.  this assumes that """
     row1 = ws.rows[0]
-    tubeIndex = get_index_by_value(row1, 'Tube#')
-    tubeNumber = ws.columns[tubeIndex][1].value
-    if tubeNumber:
-        return tubeNumber
+    tube_index = get_index_by_value(row1, 'Tube#')
+    tube_number = ws.columns[tube_index][1].value
+    if tube_number:
+        return tube_number
     else:
         return False
 
@@ -467,11 +470,11 @@ def write_out_data(output, tubes):
               'Birth Year', 'GoneSession', 'Gone Date', 'Gone Year', 'Censored',
               'AliveTipsAtBirth', 'AliveTipsAtGone', 'Avg Diameter (mm/10)',
               'Order', 'Highest Order']
-    headerIndex = {}
+    header_index = {}
     # header index specifically for use with get_column_letter()
     for i in header:
-        headerIndex[i] = header.index(i) + 1
-    headerToRootMapping = {
+        header_index[i] = header.index(i) + 1
+    headertorootmapping = {
         'RootName': 'rootName',
         'Location#': 'location',
         'BirthSession': 'birthSession',
@@ -491,54 +494,54 @@ def write_out_data(output, tubes):
     row_index = 1
     # write out header row
     for i in header:
-        col_indx = headerIndex[i]
+        col_indx = header_index[i]
         col = openpyxl.cell.get_column_letter(col_indx)
         ws.cell('%s%s' % (col, row_index)).value = i
     row_index += 1
     # process the root data from each tube
     for tube in tubes:
-        tubeNumber = tube.tubeNumber
-        logging.debug('Writing out data for tube#: %s' % (str(tubeNumber)))
+        tube_number = tube.tubeNumber
+        logging.debug('Writing out data for tube#: %s' % (str(tube_number)))
         for root in tube.roots:
             # write header
-            col_indx = headerIndex['Tube#']
+            col_indx = header_index['Tube#']
             col = openpyxl.cell.get_column_letter(col_indx)
-            ws.cell('%s%s' % (col, row_index)).value = tubeNumber
+            ws.cell('%s%s' % (col, row_index)).value = tube_number
             # build a dictionary of all the root items
-            rootDict = root.__dict__
+            root_dict = root.__dict__
             for value in header:
-                if value in headerToRootMapping:
-                    rootValue = rootDict[headerToRootMapping[value]]
-                    col_indx = headerIndex[value]
+                if value in headertorootmapping:
+                    root_value = root_dict[headertorootmapping[value]]
+                    col_indx = header_index[value]
                     col = openpyxl.cell.get_column_letter(col_indx)
-                    ws.cell('%s%s' % (col, row_index)).value = rootValue
+                    ws.cell('%s%s' % (col, row_index)).value = root_value
                 #
                 # These two elif statements are not dynamic
                 #
                 elif value == 'Birth Date':
-                    birthSession = rootDict['birthSession']
-                    birthDate = tube.sessionDates[birthSession]
+                    birth_session = root_dict['birthSession']
+                    birth_date = tube.sessionDates[birth_session]
                     # specific to the data provided by MSS
-                    birthYear = birthDate.split('.')[0]
-                    col_indx = headerIndex[value]
+                    birth_year = birth_date.split('.')[0]
+                    col_indx = header_index[value]
                     col = openpyxl.cell.get_column_letter(col_indx)
-                    ws.cell('%s%s' % (col, row_index)).value = birthDate
-                    col_indx = headerIndex['Birth Year']
+                    ws.cell('%s%s' % (col, row_index)).value = birth_date
+                    col_indx = header_index['Birth Year']
                     col = openpyxl.cell.get_column_letter(col_indx)
-                    ws.cell('%s%s' % (col, row_index)).value = birthYear
+                    ws.cell('%s%s' % (col, row_index)).value = birth_year
                 elif value == 'Gone Date':
                     # make sure root has kicked the bucket first.
-                    if rootDict['censored'] == 0:
-                        goneSession = rootDict['goneSession']
-                        goneDate = tube.sessionDates[goneSession]
+                    if root_dict['censored'] == 0:
+                        gone_session = root_dict['goneSession']
+                        gonedate = tube.sessionDates[gone_session]
                         # specific to data provided by MSS
-                        goneYear = goneDate.split('.')[0]
-                        col_indx = headerIndex[value]
+                        goneyear = gonedate.split('.')[0]
+                        col_indx = header_index[value]
                         col = openpyxl.cell.get_column_letter(col_indx)
-                        ws.cell('%s%s' % (col, row_index)).value = goneDate
-                        col_indx = headerIndex['Gone Year']
+                        ws.cell('%s%s' % (col, row_index)).value = gonedate
+                        col_indx = header_index['Gone Year']
                         col = openpyxl.cell.get_column_letter(col_indx)
-                        ws.cell('%s%s' % (col, row_index)).value = goneYear
+                        ws.cell('%s%s' % (col, row_index)).value = goneyear
                 elif value not in ['Birth Year', 'Gone Year', 'Tube#']:
                     log.warning('Unhandled value in header: {}'.format(value))
             row_index += 1
