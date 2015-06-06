@@ -58,7 +58,7 @@ class Tube(object):
             self.index = 0
             raise StopIteration
         root = self.roots[self.index]
-        self.index = self.index + 1
+        self.index += 1
         return root
 
     def add_root(self, root):
@@ -281,7 +281,7 @@ def calculate_alive_tip_stats(tube):
         if tipID not in aliveTips:
             aliveTips[tipID] = 1
         else:
-            aliveTips[tipID] = aliveTips[tipID] + 1
+            aliveTips[tipID] += 1
     return aliveTips
 
 
@@ -294,7 +294,7 @@ def calculate_gone_tip_stats(din, tube):
                 if gI not in d:
                     d[gI] = -1
                 else:
-                    d[gI] = d[gI] - 1
+                    d[gI] -= 1
     return d
 
 
@@ -408,7 +408,7 @@ def stats(wb, sheetlist, value, verbose=False):
         index = get_index_by_value(row1, value)
         for cell in ws.columns[index]:
             if cell.value in dicty:
-                dicty[cell.value] = dicty[cell.value] + 1
+                dicty[cell.value] += 1
             else:
                 dicty[cell.value] = 1
                 if verbose:
@@ -494,7 +494,7 @@ def write_out_data(output, tubes):
         col_indx = headerIndex[i]
         col = openpyxl.cell.get_column_letter(col_indx)
         ws.cell('%s%s' % (col, row_index)).value = i
-    row_index = row_index + 1
+    row_index += 1
     # process the root data from each tube
     for tube in tubes:
         tubeNumber = tube.tubeNumber
@@ -541,7 +541,7 @@ def write_out_data(output, tubes):
                         ws.cell('%s%s' % (col, row_index)).value = goneYear
                 elif value not in ['Birth Year', 'Gone Year', 'Tube#']:
                     logging.warning('Unhandled value in header: %s' % (value))
-            row_index = row_index + 1
+            row_index += 1
     # save results
     try:
         wb.save(filename=output)
