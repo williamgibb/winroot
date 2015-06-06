@@ -156,7 +156,7 @@ def build_root_data_table(ws, rootIndexData):
     for key in rootIndexData:
         index = get_index_by_value(tableHeader, key)
         if not index:
-            logging.error('Failed to obtain header value: %s' % (key))
+            log.error('Failed to obtain header value: {}'.format(key))
             return False
         rootIndexData[key] = index
     endOfRootData = get_index_at_null(ws.columns[0])
@@ -203,14 +203,14 @@ def process_worksheet(ws, exceptions_list=False):
     #
     root_data = build_root_data_table(ws, rootIndexData)
     if not root_data:
-        logging.error('Failed to get root data from sheet: %s' % (ws.title))
+        log.error('Failed to get root data from sheet: {}'.format(ws.title))
         return False
     headerRow = root_data[0]
     for key in rootIndexData:
         try:
             index = headerRow.index(key)
         except ValueError:
-            log.exception('Failed to obtain header value: %s' % (key))
+            log.exception('Failed to obtain header value: {}'.format(key))
             return False
         rootIndexData[key] = index
     # this loop will not handle exceptional roots, it just builts a list of root 
@@ -239,7 +239,7 @@ def process_worksheet(ws, exceptions_list=False):
             sessionDates[root.session] = row[rootIndexData['Date']]
             logging.debug('Inserted session %s- Date %s ' % (str(root.session), sessionDates[root.session],))
     # no longer need to keep this data in memory
-    del (root_data)
+    del root_data
     # need to know what session value to use for finalizing root values.
     tube.maxSessionCount = maxSessionCount
     tube.sessionDates = sessionDates
@@ -412,7 +412,7 @@ def stats(wb, sheetlist, value, verbose=False):
             else:
                 dicty[cell.value] = 1
                 if verbose:
-                    logging.info('Found new cell.value in sheet: %s' % (sheet))
+                    log.info('Found new cell.value in sheet: {}'.format(sheet))
     return dicty
 
 
@@ -540,7 +540,7 @@ def write_out_data(output, tubes):
                         col = openpyxl.cell.get_column_letter(col_indx)
                         ws.cell('%s%s' % (col, row_index)).value = goneYear
                 elif value not in ['Birth Year', 'Gone Year', 'Tube#']:
-                    logging.warning('Unhandled value in header: %s' % (value))
+                    log.warning('Unhandled value in header: {}'.format(value))
             row_index += 1
     # save results
     try:
@@ -595,12 +595,12 @@ def main(options):
         try:
             ws = wb.get_sheet_by_name(sheet)
         except Exception:
-            log.exception('Error occured attempting to get worksheet: %s' % (sheet))
+            log.exception('Error occured attempting to get worksheet: {}'.format(sheet))
             # attempt to get the next worksheet
             continue
         tube = process_worksheet(ws)
         if not tube:
-            logging.error('Was not able to process the tube data from worksheet: %s' % (sheet))
+            log.error('Was not able to process the tube data from worksheet: {}'.format(sheet))
         tubes.append(tube)
     if not tubes:
         logging.error('Was unable to get any tube data')
@@ -609,7 +609,7 @@ def main(options):
     # write out the data for each tube into the new worksheet
     foo = write_out_data(options.output, tubes)
     if foo:
-        logging.info('Sucesfully wrote out data to %s' % (options.output))
+        log.info('Sucesfully wrote out data to {}'.format(options.output))
     else:
         logging.info('Did not write data out.')
         sys.exit(-1)
