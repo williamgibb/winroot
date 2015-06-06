@@ -19,6 +19,7 @@ import sys
 # logging config
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(levelname)s: %(message)s [%(filename)s:%(funcName)s]')
 
+
 class Root:
     def __init__(self, rootName, location, birthSession):
         self.rootName = rootName
@@ -39,7 +40,6 @@ class Root:
         self.isAlive = ''
 
 
-
 class Tube:
     def __init__(self, tubeNumber):
         self.tubeNumber = tubeNumber
@@ -48,10 +48,11 @@ class Tube:
         self.tipStats = ''
         self.sessionDates = {}
         self.index = 0
-    # this iter code is broken and i'm not certain why    
+
+    # this iter code is broken and i'm not certain why
     def __iter__(self):
         return self
-        
+
     def next(self):
         if self.index == len(self.roots):
             self.index = 0
@@ -59,11 +60,11 @@ class Tube:
         root = self.roots[self.index]
         self.index = self.index + 1
         return root
-        
+
     def add_root(self, root):
         root.tube = self.tubeNumber
         self.roots.append(root)
-        
+
     def insert_or_update_root(self, root):
         # insert root if the root identity is new
         insert = True
@@ -85,10 +86,10 @@ class Tube:
         if insert:
             # possible to insert a root at the last session.  likely rare though.
             # need to finalize this root before adding it into the tube.
-            logging.debug('Adding root to tube %s' %(str(root.identity)))
-            self.add_root(root)            
+            logging.debug('Adding root to tube %s' % (str(root.identity)))
+            self.add_root(root)
         return True
-        
+
     def finalize_root(self, root):
         finalized = False
         for existingRoot in self:
@@ -105,11 +106,13 @@ class Tube:
 
 
 def get_test_ws():
-    wb = openpyxl.load_workbook(filename = r'unedited.xlsx')
+    wb = openpyxl.load_workbook(filename=r'unedited.xlsx')
     ws = wb.get_sheet_by_name('T008 Root Synth')
     return ws
 
+
 ''' general helper function for ws row/column access'''
+
 
 def get_index_by_value(cell_list, value):
     ''' given a list of cells and a value, return the index in the list of
@@ -125,10 +128,11 @@ def get_index_by_value(cell_list, value):
                 index = cell_list.index(cell)
             except ValueError, e:
                 logging.error('Failed to get index for value after finding a match')
-                logging.error('%s' %(e))
+                logging.error('%s' % (e))
                 return index
             break
     return index
+
 
 def get_index_at_null(cell_list):
     ''' get the index value for the first NoneType object present in cell list'''
@@ -139,9 +143,11 @@ def get_index_at_null(cell_list):
             break
     return index
 
+
 ''' helper functions for finding the import values from the root data table'''
 
-def build_root_data_table(ws,rootIndexData):
+
+def build_root_data_table(ws, rootIndexData):
     ''' BUILD A LIST OF DATA REPRESENTING EACH ROW IN WORKSHEET UP 
     TO THE SYNTHESIS TABLE
     '''
@@ -151,7 +157,7 @@ def build_root_data_table(ws,rootIndexData):
     for key in rootIndexData:
         index = get_index_by_value(tableHeader, key)
         if not index:
-            logging.error('Failed to obtain header value: %s' %(key))
+            logging.error('Failed to obtain header value: %s' % (key))
             return False
         rootIndexData[key] = index
     endOfRootData = get_index_at_null(ws.columns[0])
@@ -163,8 +169,8 @@ def build_root_data_table(ws,rootIndexData):
     for row in ws.rows[:endOfRootData]:
         rootRow = []
         for key in rootIndexData:
-                value = row[rootIndexData[key]].value
-                rootRow.append(value)
+            value = row[rootIndexData[key]].value
+            rootRow.append(value)
         rootData.append(rootRow)
     return rootData
 
@@ -173,15 +179,15 @@ def process_worksheet(ws, exceptions_list=False):
     '''Process a worksheet, and build a tube object containing all the root data.
     This data can then be dumped out when all tubes have been processed.'''
     rootIndexData = {
-    'RootName': 0,
-    'Location#': 0,
-    'Session#': 0,
-    'BirthSession': 0,
-    'TotAvgDiam(mm/10)': 0,
-    'TipLivStatus': 0,
-    'RootNotes': 0,
-    'NumberOfTips': 0,
-    'Date' : 0,
+        'RootName': 0,
+        'Location#': 0,
+        'Session#': 0,
+        'BirthSession': 0,
+        'TotAvgDiam(mm/10)': 0,
+        'TipLivStatus': 0,
+        'RootNotes': 0,
+        'NumberOfTips': 0,
+        'Date': 0,
     }
     #
     # exception handling
@@ -194,7 +200,7 @@ def process_worksheet(ws, exceptions_list=False):
     # basic information
     tubeNumber = get_tube_number(ws)
     tube = Tube(tubeNumber)
-    logging.debug('Processing Data for tube #: %s' %(str(tubeNumber)))
+    logging.debug('Processing Data for tube #: %s' % (str(tubeNumber)))
     #
     root_data = build_root_data_table(ws, rootIndexData)
     if not root_data:
@@ -205,7 +211,7 @@ def process_worksheet(ws, exceptions_list=False):
         try:
             index = headerRow.index(key)
         except ValueError, e:
-            logging.error('Failed to obtain header value: %s' %(key))
+            logging.error('Failed to obtain header value: %s' % (key))
             logging.error('%s' % (e))
             return False
         rootIndexData[key] = index
@@ -230,12 +236,12 @@ def process_worksheet(ws, exceptions_list=False):
         # process session statistics
         if root.session > maxSessionCount:
             maxSessionCount = root.session
-            logging.debug('MaxSessionCount updated to %s' %(str(maxSessionCount)))
+            logging.debug('MaxSessionCount updated to %s' % (str(maxSessionCount)))
         if root.session not in sessionDates:
             sessionDates[root.session] = row[rootIndexData['Date']]
-            logging.debug('Inserted session %s- Date %s ' %(str(root.session),sessionDates[root.session],))
+            logging.debug('Inserted session %s- Date %s ' % (str(root.session), sessionDates[root.session],))
     # no longer need to keep this data in memory
-    del(root_data)
+    del (root_data)
     # need to know what session value to use for finalizing root values.
     tube.maxSessionCount = maxSessionCount
     tube.sessionDates = sessionDates
@@ -253,7 +259,7 @@ def process_worksheet(ws, exceptions_list=False):
         if not status:
             logging.error('Failed to finalize root %s' % (str(root.identity)))
             print root.identity
-    
+
     # need to calculate alive/dead tip numbers
     tipStats = tip_stats(tube)
     for r in tube.roots:
@@ -262,10 +268,11 @@ def process_worksheet(ws, exceptions_list=False):
             goneIdentity = r.goneSession, r.location
             r.aliveTipsAtGone = tipStats[goneIdentity]
     tube.tipStats = tipStats
-    
-    logging.debug('Identified %s roots in sheet: %s' % (str(len(roots)),ws.title))
+
+    logging.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
     logging.debug('Found %s roots in tube' % (str(len(tube.roots))))
     return tube
+
 
 # tip stats code
 
@@ -279,6 +286,7 @@ def calculate_alive_tip_stats(tube):
             aliveTips[tipID] = aliveTips[tipID] + 1
     return aliveTips
 
+
 def calculate_gone_tip_stats(din, tube):
     d = {}
     for i, c in sorted(din.iteritems()):
@@ -288,8 +296,9 @@ def calculate_gone_tip_stats(din, tube):
                 if gI not in d:
                     d[gI] = -1
                 else:
-                    d[gI] = d[gI] -1
+                    d[gI] = d[gI] - 1
     return d
+
 
 def tip_stats(tube):
     # get count of alive tips and the locations/sessions where roots die
@@ -330,13 +339,12 @@ def tip_stats(tube):
         for sess in loc_sessions[k]:
             key = sess, k
             if key in aliveStats:
-                    temp = aliveStats[key] + temp
+                temp = aliveStats[key] + temp
             if key in goneStats:
-                    temp = goneStats[key] + temp
+                temp = goneStats[key] + temp
             totalStats[key] = temp
     # return totalStats
     return totalStats
-    
 
 
 # root processing code
@@ -367,6 +375,7 @@ def root_from_row(row, indexDict):
     root.avgDiameter = row[indexDict['TotAvgDiam(mm/10)']]
     return root
 
+
 def get_tube_number(ws):
     ''' get tube number from a given worksheet.  this assumes that '''
     row1 = ws.rows[0]
@@ -377,7 +386,10 @@ def get_tube_number(ws):
     else:
         return False
 
+
 ''' helper function for working with openpyxl'''
+
+
 def get_root_sheets(wb):
     '''given a workbook, return all sheet names that end in "Root Synth""'''
     root_sheets = []
@@ -393,24 +405,25 @@ def stats(wb, sheetlist, value, verbose=False):
     this is done across a workbook'''
     dicty = {}
     for sheet in sheetlist:
-            ws = wb.get_sheet_by_name(sheet)
-            row1 = ws.rows[0]
-            index = get_index_by_value(row1,value)
-            for cell in ws.columns[index]:
-                    if cell.value in dicty:
-                        dicty[cell.value] = dicty[cell.value] + 1
-                    else:
-                        dicty[cell.value] = 1
-                        if verbose:
-                            logging.info('Found new cell.value in sheet: %s' % (sheet))
+        ws = wb.get_sheet_by_name(sheet)
+        row1 = ws.rows[0]
+        index = get_index_by_value(row1, value)
+        for cell in ws.columns[index]:
+            if cell.value in dicty:
+                dicty[cell.value] = dicty[cell.value] + 1
+            else:
+                dicty[cell.value] = 1
+                if verbose:
+                    logging.info('Found new cell.value in sheet: %s' % (sheet))
     return dicty
 
 
 def print_items_keys(iterable):
     for thing in iterable:
-            for attr, value in thing.__dict__.iteritems():
-                    print attr, value
-            print '================================'
+        for attr, value in thing.__dict__.iteritems():
+            print attr, value
+        print '================================'
+
 
 # main function support
 # http://code.activestate.com/recipes/577058/
@@ -423,8 +436,8 @@ def query_yes_no(question, default="yes"):
         
     The "answer" return value is one of "yes" or "no".
     """
-    valid = {"yes":True,   "y":True,  "ye":True,
-                "no":False,     "n":False}
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
     if default == None:
         prompt = " [y/n] "
     elif default == "yes":
@@ -433,7 +446,7 @@ def query_yes_no(question, default="yes"):
         prompt = " [y/N] "
     else:
         raise ValueError("invalid default answer: '%s'" % default)
-    
+
     while True:
         sys.stdout.write(question + prompt)
         choice = raw_input().lower()
@@ -443,7 +456,7 @@ def query_yes_no(question, default="yes"):
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")
-    
+
 
 def write_out_data(output, tubes):
     '''
@@ -453,27 +466,27 @@ def write_out_data(output, tubes):
     '''
     # setup header indices
     header = ['RootName', 'Tube#', 'Location#', 'BirthSession', 'Birth Date',
-        'Birth Year', 'GoneSession', 'Gone Date', 'Gone Year', 'Censored', 
-        'AliveTipsAtBirth', 'AliveTipsAtGone', 'Avg Diameter (mm/10)',
-        'Order', 'Highest Order']
+              'Birth Year', 'GoneSession', 'Gone Date', 'Gone Year', 'Censored',
+              'AliveTipsAtBirth', 'AliveTipsAtGone', 'Avg Diameter (mm/10)',
+              'Order', 'Highest Order']
     headerIndex = {}
     # header index specifically for use with get_column_letter()
     for i in header:
         headerIndex[i] = header.index(i) + 1
     headerToRootMapping = {
-        'RootName' : 'rootName',
-        'Location#' : 'location',
-        'BirthSession' : 'birthSession',
-        'GoneSession' : 'goneSession',
-        'Censored' : 'censored',
-        'AliveTipsAtBirth' : 'aliveTipsAtBirth',
-        'AliveTipsAtGone' : 'aliveTipsAtGone',
-        'Avg Diameter (mm/10)' : 'avgDiameter',
-        'Order' : 'order',
-        'Highest Order' : 'highestOrder',
+        'RootName': 'rootName',
+        'Location#': 'location',
+        'BirthSession': 'birthSession',
+        'GoneSession': 'goneSession',
+        'Censored': 'censored',
+        'AliveTipsAtBirth': 'aliveTipsAtBirth',
+        'AliveTipsAtGone': 'aliveTipsAtGone',
+        'Avg Diameter (mm/10)': 'avgDiameter',
+        'Order': 'order',
+        'Highest Order': 'highestOrder',
     }
-    
-    #setup workbook
+
+    # setup workbook
     wb = openpyxl.Workbook()
     ws = wb.worksheets[0]
     ws.title = 'Compiled Data'
@@ -482,7 +495,7 @@ def write_out_data(output, tubes):
     for i in header:
         col_indx = headerIndex[i]
         col = openpyxl.cell.get_column_letter(col_indx)
-        ws.cell('%s%s' % (col,row_index)).value = i
+        ws.cell('%s%s' % (col, row_index)).value = i
     row_index = row_index + 1
     # process the root data from each tube
     for tube in tubes:
@@ -492,7 +505,7 @@ def write_out_data(output, tubes):
             # write header
             col_indx = headerIndex['Tube#']
             col = openpyxl.cell.get_column_letter(col_indx)
-            ws.cell('%s%s' % (col,row_index)).value = tubeNumber
+            ws.cell('%s%s' % (col, row_index)).value = tubeNumber
             # build a dictionary of all the root items
             rootDict = root.__dict__
             for value in header:
@@ -500,7 +513,7 @@ def write_out_data(output, tubes):
                     rootValue = rootDict[headerToRootMapping[value]]
                     col_indx = headerIndex[value]
                     col = openpyxl.cell.get_column_letter(col_indx)
-                    ws.cell('%s%s' % (col,row_index)).value = rootValue
+                    ws.cell('%s%s' % (col, row_index)).value = rootValue
                 #
                 # These two elif statements are not dynamic
                 #
@@ -511,10 +524,10 @@ def write_out_data(output, tubes):
                     birthYear = birthDate.split('.')[0]
                     col_indx = headerIndex[value]
                     col = openpyxl.cell.get_column_letter(col_indx)
-                    ws.cell('%s%s' % (col,row_index)).value = birthDate
+                    ws.cell('%s%s' % (col, row_index)).value = birthDate
                     col_indx = headerIndex['Birth Year']
                     col = openpyxl.cell.get_column_letter(col_indx)
-                    ws.cell('%s%s' % (col,row_index)).value = birthYear
+                    ws.cell('%s%s' % (col, row_index)).value = birthYear
                 elif value == 'Gone Date':
                     # make sure root has kicked the bucket first.
                     if rootDict['censored'] == 0:
@@ -524,21 +537,23 @@ def write_out_data(output, tubes):
                         goneYear = goneDate.split('.')[0]
                         col_indx = headerIndex[value]
                         col = openpyxl.cell.get_column_letter(col_indx)
-                        ws.cell('%s%s' % (col,row_index)).value = goneDate
+                        ws.cell('%s%s' % (col, row_index)).value = goneDate
                         col_indx = headerIndex['Gone Year']
                         col = openpyxl.cell.get_column_letter(col_indx)
-                        ws.cell('%s%s' % (col,row_index)).value = goneYear
+                        ws.cell('%s%s' % (col, row_index)).value = goneYear
                 elif value not in ['Birth Year', 'Gone Year', 'Tube#']:
                     logging.warning('Unhandled value in header: %s' % (value))
             row_index = row_index + 1
     # save results
     try:
-        wb.save(filename = output)
+        wb.save(filename=output)
     except Exception, e:
         logging.error('General error handler')
         logging.error('%s' % (e))
         return False
     return True
+
+
 ##
 ## Main program functions
 ##
@@ -548,37 +563,37 @@ def main(options):
     #
     #   DOES NOT HANDLE EXCEPTION LISTS
     #
-    
+
     # file path verification and options handling
     if not options.verbose:
         logging.info('Output will not be verbose')
         logging.disable(logging.DEBUG)
-    
+
     if not os.path.isfile(options.src_file):
         logging.error('specified source is not a file')
         sys.exit(-1)
-    
+
     if os.path.exists(options.output):
         logging.warning('Specified output file already exists.\n')
         if not query_yes_no('Do you want to overwrite that file?', 'no'):
             logging.info('Exiting')
             sys.exit(-1)
-    
+
     # open up src file
     try:
-        wb = openpyxl.load_workbook(filename = options.src_file)
+        wb = openpyxl.load_workbook(filename=options.src_file)
     except Exception, e:
         logging.error('general exception handler')
         logging.error('%s' % (e))
         sys.exit(-1)
-    
+
     # get root data
     sheets = get_root_sheets(wb)
     if not sheets:
         logging.error('Could not find any WinRhizotron data sheets in the src file')
         logging.error('Make sure your workbook worksheets end in the string "Root Synth"')
         sys.exit(-1)
-    
+
     tubes = []
     for sheet in sheets:
         try:
@@ -595,7 +610,7 @@ def main(options):
     if not tubes:
         logging.error('Was unable to get any tube data')
         sys.exit(-1)
-    
+
     # write out the data for each tube into the new worksheet
     foo = write_out_data(options.output, tubes)
     if foo:
@@ -603,25 +618,24 @@ def main(options):
     else:
         logging.info('Did not write data out.')
         sys.exit(-1)
-    
+
     logging.info('Done processing all data')
     sys.exit(0)
 
 
-
 def root_options():
     opts = []
-    opts.append(optparse.make_option('--source', '-s', dest='src_file', 
-        help = 'Source xlsx file to process', default = None))
-    opts.append(optparse.make_option('--exceptions', '-e', dest='exceptions', 
-        help='A xlsx file containing root rewrite data for shifted roots', default = None))
-    opts.append(optparse.make_option('--output', '-o', dest='output', 
-        help='Define the output file (xlsx)', default = None))
-    opts.append(optparse.make_option('--verbose', '-v', dest='verbose', 
-        action='store_true', help='Enable verbose output', default = None))
-    opts.append(optparse.make_option('--verson', dest='version', 
-        action = 'store_true', help = 'show version information', default = None))
-    
+    opts.append(optparse.make_option('--source', '-s', dest='src_file',
+                                     help='Source xlsx file to process', default=None))
+    opts.append(optparse.make_option('--exceptions', '-e', dest='exceptions',
+                                     help='A xlsx file containing root rewrite data for shifted roots', default=None))
+    opts.append(optparse.make_option('--output', '-o', dest='output',
+                                     help='Define the output file (xlsx)', default=None))
+    opts.append(optparse.make_option('--verbose', '-v', dest='verbose',
+                                     action='store_true', help='Enable verbose output', default=None))
+    opts.append(optparse.make_option('--verson', dest='version',
+                                     action='store_true', help='show version information', default=None))
+
     return opts
 
 
@@ -629,18 +643,18 @@ if __name__ == "__main__":
     usage_str = 'usage: %prog [options]'
     parser = optparse.OptionParser(usage=usage_str, option_list=root_options())
     options, args = parser.parse_args()
-    
+
     if options.version:
-        logging.info('Program Version: %s' %(str(__version__)))
+        logging.info('Program Version: %s' % (str(__version__)))
         sys.exit(-1)
-    
+
     if not options.src_file:
         logging.error('Must specify a source file')
         # USAGE STRING HERE
         sys.exit(-1)
-    
+
     if not options.output:
         logging.error('Must specify a output file')
         sys.exit(-1)
-        
+
     main(options)
