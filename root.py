@@ -1,3 +1,4 @@
+from __future__ import print_function
 '''
 root.py
 
@@ -125,9 +126,8 @@ def get_index_by_value(cell_list, value):
         if cell.value == value:
             try:
                 index = cell_list.index(cell)
-            except ValueError, e:
-                logging.error('Failed to get index for value after finding a match')
-                logging.error('%s' % (e))
+            except ValueError:
+                log.exception('Failed to get index for value after finding a match')
                 return index
             break
     return index
@@ -194,8 +194,8 @@ def process_worksheet(ws, exceptions_list=False):
     if exceptions_list:
         try:
             exceptions = exceptions_list[tubeNumber]
-        except KeyError, e:
-            logging.error('No exceptions list found for tube number: %s' % (str(tubeNumber)))
+        except KeyError:
+            log.exception('No exceptions list found for tube number: %s' % (str(tubeNumber)))
     # basic information
     tubeNumber = get_tube_number(ws)
     tube = Tube(tubeNumber)
@@ -209,9 +209,8 @@ def process_worksheet(ws, exceptions_list=False):
     for key in rootIndexData:
         try:
             index = headerRow.index(key)
-        except ValueError, e:
-            logging.error('Failed to obtain header value: %s' % (key))
-            logging.error('%s' % (e))
+        except ValueError:
+            log.exception('Failed to obtain header value: %s' % (key))
             return False
         rootIndexData[key] = index
     # this loop will not handle exceptional roots, it just builts a list of root 
@@ -257,7 +256,7 @@ def process_worksheet(ws, exceptions_list=False):
         status = tube.finalize_root(root)
         if not status:
             logging.error('Failed to finalize root %s' % (str(root.identity)))
-            print root.identity
+            log.error(root.identity)
 
     # need to calculate alive/dead tip numbers
     tipStats = tip_stats(tube)
@@ -288,7 +287,7 @@ def calculate_alive_tip_stats(tube):
 
 def calculate_gone_tip_stats(din, tube):
     d = {}
-    for i, c in sorted(din.iteritems()):
+    for i, c in sorted(din.items()):
         for r in tube.roots:
             if (r.tipIdentity == i) and r.goneSession:
                 gI = r.goneSession, r.location
@@ -419,9 +418,9 @@ def stats(wb, sheetlist, value, verbose=False):
 
 def print_items_keys(iterable):
     for thing in iterable:
-        for attr, value in thing.__dict__.iteritems():
-            print attr, value
-        print '================================'
+        for attr, value in thing.__dict__.items():
+            print(attr, value)
+        print('================================')
 
 
 # main function support
@@ -546,9 +545,8 @@ def write_out_data(output, tubes):
     # save results
     try:
         wb.save(filename=output)
-    except Exception, e:
-        logging.error('General error handler')
-        logging.error('%s' % (e))
+    except Exception:
+        log.exception('General error handler')
         return False
     return True
 
@@ -581,9 +579,8 @@ def main(options):
     # open up src file
     try:
         wb = openpyxl.load_workbook(filename=options.src_file)
-    except Exception, e:
-        logging.error('general exception handler')
-        logging.error('%s' % (e))
+    except Exception:
+        log.exception('general exception handler')
         sys.exit(-1)
 
     # get root data
@@ -597,9 +594,8 @@ def main(options):
     for sheet in sheets:
         try:
             ws = wb.get_sheet_by_name(sheet)
-        except Exception, e:
-            logging.error('Error occured attempting to get worksheet: %s' % (sheet))
-            logging.error('%s' % (e))
+        except Exception:
+            log.exception('Error occured attempting to get worksheet: %s' % (sheet))
             # attempt to get the next worksheet
             continue
         tube = process_worksheet(ws)
