@@ -6,19 +6,17 @@ library for handling root data from winrhizotron
 this whole file should really be broken between a library file and a program
 
 '''
-# stuff for the library
-import openpyxl
+import argparse
 import logging
-
-# stuff for the script
-import optparse
 import os
 import sys
+
+import openpyxl
 
 
 # logging config
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(levelname)s: %(message)s [%(filename)s:%(funcName)s]')
-
+log = logging.getLogger(__name__)
 
 class Root:
     def __init__(self, rootName, location, birthSession):
@@ -624,37 +622,20 @@ def main(options):
 
 
 def root_options():
-    opts = []
-    opts.append(optparse.make_option('--source', '-s', dest='src_file',
-                                     help='Source xlsx file to process', default=None))
-    opts.append(optparse.make_option('--exceptions', '-e', dest='exceptions',
-                                     help='A xlsx file containing root rewrite data for shifted roots', default=None))
-    opts.append(optparse.make_option('--output', '-o', dest='output',
-                                     help='Define the output file (xlsx)', default=None))
-    opts.append(optparse.make_option('--verbose', '-v', dest='verbose',
-                                     action='store_true', help='Enable verbose output', default=None))
-    opts.append(optparse.make_option('--verson', dest='version',
-                                     action='store_true', help='show version information', default=None))
-
-    return opts
+    parser = argparse.ArgumentParser(prog=__name__)
+    parser.add_argument('-s', '--source', dest='src_file', required=True, type=str, action='store',
+                        help='Source xlsx file to process')
+    parser.add_argument('-e', '--exceptions', dest='exceptions', type=str, action='store', default=None,
+                        help='A xlsx file containing root rewrite data for shifted roots')
+    parser.add_argument('-o', '--output', dest='output', required=True, type=str, action='store',
+                        help='Define the output file (xlsx)')
+    parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
+                        help='Enable verbose output')
+    return parser
 
 
 if __name__ == "__main__":
-    usage_str = 'usage: %prog [options]'
-    parser = optparse.OptionParser(usage=usage_str, option_list=root_options())
-    options, args = parser.parse_args()
-
-    if options.version:
-        logging.info('Program Version: %s' % (str(__version__)))
-        sys.exit(-1)
-
-    if not options.src_file:
-        logging.error('Must specify a source file')
-        # USAGE STRING HERE
-        sys.exit(-1)
-
-    if not options.output:
-        logging.error('Must specify a output file')
-        sys.exit(-1)
+    parser = root_options()
+    options = parser.parse_args()
 
     main(options)
