@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 '''
 root.py
 
@@ -439,7 +440,7 @@ def query_yes_no(question, default="yes"):
     """
     valid = {"yes": True, "y": True, "ye": True,
              "no": False, "n": False}
-    if default == None:
+    if not default:
         prompt = " [y/n] "
     elif default == "yes":
         prompt = " [Y/n] "
@@ -554,9 +555,9 @@ def write_out_data(output, tubes):
     return True
 
 
-##
-## Main program functions
-##
+#
+# Main program functions
+#
 
 
 def main(options):
