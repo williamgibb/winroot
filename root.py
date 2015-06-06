@@ -189,7 +189,7 @@ def process_worksheet(ws, exceptions_list=False):
         'NumberOfTips': 0,
         'Date': 0,
     }
-    #
+    tube_number = get_tube_number(ws)
     # exception handling
     exceptions = None
     if exceptions_list:
@@ -198,7 +198,6 @@ def process_worksheet(ws, exceptions_list=False):
         except KeyError:
             log.exception('No exceptions list found for tube number: %s' % (str(tube_number)))
     # basic information
-    tube_number = get_tube_number(ws)
     tube = Tube(tube_number)
     logging.debug('Processing Data for tube #: %s' % (str(tube_number)))
     #
@@ -263,13 +262,13 @@ def process_worksheet(ws, exceptions_list=False):
             log.error(root.identity)
 
     # need to calculate alive/dead tip numbers
-    tip_stats = tip_stats(tube)
+    tstats = tip_stats(tube)
     for r in tube.roots:
-        r.aliveTipsAtBirth = tip_stats[r.tipIdentity]
+        r.aliveTipsAtBirth = tstats[r.tipIdentity]
         if r.goneSession:
             gone_identity = r.goneSession, r.location
-            r.aliveTipsAtGone = tip_stats[gone_identity]
-    tube.tipStats = tip_stats
+            r.aliveTipsAtGone = tstats[gone_identity]
+    tube.tipStats = tstats
 
     logging.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
     logging.debug('Found %s roots in tube' % (str(len(tube.roots))))
