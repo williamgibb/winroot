@@ -115,12 +115,12 @@ def get_test_ws():
 
 
 def get_index_by_value(cell_list, value):
-    ''' given a list of cells and a value, return the index in the list of
+    """ given a list of cells and a value, return the index in the list of
     that cell value.  this returns the index of the first time the value
     is found.
-    
+
     if the value is not found, return false
-    '''
+    """
     index = False
     for cell in cell_list:
         if cell.value == value:
@@ -134,7 +134,7 @@ def get_index_by_value(cell_list, value):
 
 
 def get_index_at_null(cell_list):
-    ''' get the index value for the first NoneType object present in cell list'''
+    """ get the index value for the first NoneType object present in cell list"""
     index = False
     for cell in cell_list:
         if not cell.value:
@@ -147,9 +147,9 @@ def get_index_at_null(cell_list):
 
 
 def build_root_data_table(ws, rootIndexData):
-    ''' BUILD A LIST OF DATA REPRESENTING EACH ROW IN WORKSHEET UP 
+    """ BUILD A LIST OF DATA REPRESENTING EACH ROW IN WORKSHEET UP
     TO THE SYNTHESIS TABLE
-    '''
+    """
     rootData = []
     # get index values for each important column
     tableHeader = ws.rows[0]
@@ -175,8 +175,8 @@ def build_root_data_table(ws, rootIndexData):
 
 
 def process_worksheet(ws, exceptions_list=False):
-    '''Process a worksheet, and build a tube object containing all the root data.
-    This data can then be dumped out when all tubes have been processed.'''
+    """Process a worksheet, and build a tube object containing all the root data.
+    This data can then be dumped out when all tubes have been processed."""
     rootIndexData = {
         'RootName': 0,
         'Location#': 0,
@@ -348,7 +348,7 @@ def tip_stats(tube):
 # root processing code
 
 def root_from_row(row, indexDict):
-    ''' build a root object from row, using indexDict for mappings'''
+    """ build a root object from row, using indexDict for mappings"""
     # identification information
     rootName = row[indexDict['RootName']]
     location = row[indexDict['Location#']]
@@ -375,7 +375,7 @@ def root_from_row(row, indexDict):
 
 
 def get_tube_number(ws):
-    ''' get tube number from a given worksheet.  this assumes that '''
+    """ get tube number from a given worksheet.  this assumes that """
     row1 = ws.rows[0]
     tubeIndex = get_index_by_value(row1, 'Tube#')
     tubeNumber = ws.columns[tubeIndex][1].value
@@ -389,7 +389,7 @@ def get_tube_number(ws):
 
 
 def get_root_sheets(wb):
-    '''given a workbook, return all sheet names that end in "Root Synth""'''
+    """given a workbook, return all sheet names that end in "Root Synth"\""""
     root_sheets = []
     sheets = wb.get_sheet_names()
     for sheet in sheets:
@@ -399,8 +399,8 @@ def get_root_sheets(wb):
 
 
 def stats(wb, sheetlist, value, verbose=False):
-    '''generate counts of different values in a given column, based on column name
-    this is done across a workbook'''
+    """generate counts of different values in a given column, based on column name
+    this is done across a workbook"""
     dicty = {}
     for sheet in sheetlist:
         ws = wb.get_sheet_by_name(sheet)
@@ -457,11 +457,11 @@ def query_yes_no(question, default="yes"):
 
 
 def write_out_data(output, tubes):
-    '''
+    """
     write out the data from tubes in a xlsx workbook
-    
+
     header data chosen by MSS
-    '''
+    """
     # setup header indices
     header = ['RootName', 'Tube#', 'Location#', 'BirthSession', 'Birth Date',
               'Birth Year', 'GoneSession', 'Gone Date', 'Gone Year', 'Censored',
