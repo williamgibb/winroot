@@ -18,7 +18,8 @@ import openpyxl
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(levelname)s: %(message)s [%(filename)s:%(funcName)s]')
 log = logging.getLogger(__name__)
 
-class Root:
+
+class Root(object):
     def __init__(self, rootName, location, birthSession):
         self.rootName = rootName
         self.location = location
@@ -38,7 +39,7 @@ class Root:
         self.isAlive = ''
 
 
-class Tube:
+class Tube(object):
     def __init__(self, tubeNumber):
         self.tubeNumber = tubeNumber
         self.roots = []
