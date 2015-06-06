@@ -547,6 +547,7 @@ def write_out_data(output, tubes):
                     log.warning('Unhandled value in header: {}'.format(value))
             row_index += 1
     # save results
+    # noinspection PyBroadException
     try:
         wb.save(filename=output)
     except Exception:
@@ -581,6 +582,7 @@ def main(options):
             sys.exit(-1)
 
     # open up src file
+    # noinspection PyBroadException
     try:
         wb = openpyxl.load_workbook(filename=options.src_file)
     except Exception:
@@ -596,6 +598,7 @@ def main(options):
 
     tubes = []
     for sheet in sheets:
+        # noinspection PyBroadException
         try:
             ws = wb.get_sheet_by_name(sheet)
         except Exception:
