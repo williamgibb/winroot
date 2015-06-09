@@ -17,6 +17,7 @@ import openpyxl
 
 import root
 import tube
+import utility
 
 
 # logging config
@@ -30,38 +31,6 @@ def get_test_ws():
     return ws
 
 
-''' general helper function for ws row/column access'''
-
-
-def get_index_by_value(cell_list, value):
-    """ given a list of cells and a value, return the index in the list of
-    that cell value.  this returns the index of the first time the value
-    is found.
-
-    if the value is not found, return false
-    """
-    index = False
-    for cell in cell_list:
-        if cell.value == value:
-            try:
-                index = cell_list.index(cell)
-            except ValueError:
-                log.exception('Failed to get index for value after finding a match')
-                return index
-            break
-    return index
-
-
-def get_index_at_null(cell_list):
-    """ get the index value for the first NoneType object present in cell list"""
-    index = False
-    for cell in cell_list:
-        if not cell.value:
-            index = cell_list.index(cell)
-            break
-    return index
-
-
 ''' helper functions for finding the import values from the root data table'''
 
 
@@ -73,12 +42,12 @@ def build_root_data_table(ws, rootindexdata):
     # get index values for each important column
     tableheader = ws.rows[0]
     for key in rootindexdata:
-        index = get_index_by_value(tableheader, key)
+        index = utility.get_index_by_value(tableheader, key)
         if not index:
             log.error('Failed to obtain header value: {}'.format(key))
             return False
         rootindexdata[key] = index
-    endof_rootdata = get_index_at_null(ws.columns[0])
+    endof_rootdata = utility.get_index_at_null(ws.columns[0])
     if not endof_rootdata:
         log.error('Failed to find end of root data.')
         return False
@@ -279,7 +248,7 @@ def root_from_row(row, indexdict):
 def get_tube_number(ws):
     """ get tube number from a given worksheet.  this assumes that """
     row1 = ws.rows[0]
-    tube_index = get_index_by_value(row1, 'Tube#')
+    tube_index = utility.get_index_by_value(row1, 'Tube#')
     tube_number = ws.columns[tube_index][1].value
     if tube_number:
         return tube_number
@@ -300,64 +269,8 @@ def get_root_sheets(wb):
     return root_sheets
 
 
-def stats(wb, sheetlist, value, verbose=False):
-    """generate counts of different values in a given column, based on column name
-    this is done across a workbook"""
-    dicty = {}
-    for sheet in sheetlist:
-        ws = wb.get_sheet_by_name(sheet)
-        row1 = ws.rows[0]
-        index = get_index_by_value(row1, value)
-        for cell in ws.columns[index]:
-            if cell.value in dicty:
-                dicty[cell.value] += 1
-            else:
-                dicty[cell.value] = 1
-                if verbose:
-                    log.info('Found new cell.value in sheet: {}'.format(sheet))
-    return dicty
-
-
-def print_items_keys(iterable):
-    for thing in iterable:
-        for attr, value in thing.__dict__.items():
-            print(attr, value)
-        print('================================')
-
 
 # main function support
-# http://code.activestate.com/recipes/577058/
-def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-        
-    The "answer" return value is one of "yes" or "no".
-    """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
-    if not default:
-        prompt = " [y/n] "
-    elif default == "yes":
-        prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")
-
-
 def write_out_data(output, tubes):
     """
     write out the data from tubes in a xlsx workbook
@@ -475,7 +388,7 @@ def main(options):
 
     if os.path.exists(options.output):
         log.warning('Specified output file already exists.\n')
-        if not query_yes_no('Do you want to overwrite that file?', 'no'):
+        if not utility.query_yes_no('Do you want to overwrite that file?', 'no'):
             log.info('Exiting')
             sys.exit(-1)
 
