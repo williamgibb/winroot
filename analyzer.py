@@ -100,15 +100,15 @@ def process_worksheet(ws):
     session_dates = {}
     roots = []
     for row in root_data[1:]:
-        root = root_from_row(row, root_index_data)
-        roots.append(root)
+        root_obj = root_from_row(row, root_index_data)
+        roots.append(root_obj)
         # process session statistics
-        if root.session > max_session_count:
-            max_session_count = root.session
+        if root_obj.session > max_session_count:
+            max_session_count = root_obj.session
             log.debug('MaxSessionCount updated to %s' % (str(max_session_count)))
-        if root.session not in session_dates:
-            session_dates[root.session] = row[root_index_data['Date']]
-            log.debug('Inserted session %s- Date %s ' % (str(root.session), session_dates[root.session],))
+        if root_obj.session not in session_dates:
+            session_dates[root_obj.session] = row[root_index_data['Date']]
+            log.debug('Inserted session %s- Date %s ' % (str(root_obj.session), session_dates[root_obj.session],))
     # no longer need to keep this data in memory
     del root_data
     # need to know what session value to use for finalizing root values.
@@ -117,17 +117,17 @@ def process_worksheet(ws):
     # add each root to the tube
     log.debug('Inserting roots')
     final_roots = []
-    for root in roots:
-        t.insert_or_update_root(root)
-        if root.session == max_session_count:
-            final_roots.append(root)
+    for root_obj in roots:
+        t.insert_or_update_root(root_obj)
+        if root_obj.session == max_session_count:
+            final_roots.append(root_obj)
     # finalize roots
     log.debug('Finalizing roots')
-    for root in final_roots:
-        status = t.finalize_root(root)
+    for root_obj in final_roots:
+        status = t.finalize_root(root_obj)
         if not status:
-            log.error('Failed to finalize root %s' % (str(root.identity)))
-            log.error(root.identity)
+            log.error('Failed to finalize root %s' % (str(root_obj.identity)))
+            log.error(root_obj.identity)
 
     # need to calculate alive/dead tip numbers
     tstats = tip_stats(t)
@@ -145,9 +145,9 @@ def process_worksheet(ws):
 
 # tip stats code
 
-def calculate_alive_tip_stats(tube):
+def calculate_alive_tip_stats(tube_obj):
     alive_tips = {}
-    for existingRoot in tube.roots:
+    for existingRoot in tube_obj.roots:
         tip_id = existingRoot.tipIdentity
         if tip_id not in alive_tips:
             alive_tips[tip_id] = 1
@@ -156,12 +156,12 @@ def calculate_alive_tip_stats(tube):
     return alive_tips
 
 
-def calculate_gone_tip_stats(din, tube):
+def calculate_gone_tip_stats(din, tube_obj):
     d = {}
     for i, c in sorted(din.items()):
-        for r in tube.roots:
-            if (r.tipIdentity == i) and r.goneSession:
-                gi = r.goneSession, r.location
+        for root_obj in tube_obj.roots:
+            if (root_obj.tipIdentity == i) and root_obj.goneSession:
+                gi = root_obj.goneSession, root_obj.location
                 if gi not in d:
                     d[gi] = -1
                 else:
@@ -169,13 +169,13 @@ def calculate_gone_tip_stats(din, tube):
     return d
 
 
-def tip_stats(tube):
+def tip_stats(tube_obj):
     # get count of alive tips and the locations/sessions where roots die
-    alive_stats = calculate_alive_tip_stats(tube)
-    gone_stats = calculate_gone_tip_stats(alive_stats, tube)
+    alive_stats = calculate_alive_tip_stats(tube_obj)
+    gone_stats = calculate_gone_tip_stats(alive_stats, tube_obj)
     # build a list of all root locations
     locations = []
-    for r in tube.roots:
+    for r in tube_obj.roots:
         if r.location not in locations:
             locations.append(r.location)
     # build a mapping of sessions to lists of locations
@@ -311,16 +311,16 @@ def write_out_data(output, tubes):
         ws.cell('%s%s' % (col, row_index)).value = i
     row_index += 1
     # process the root data from each tube
-    for tube in tubes:
-        tube_number = tube.tubeNumber
+    for tube_obj in tubes:
+        tube_number = tube_obj.tubeNumber
         log.debug('Writing out data for tube#: %s' % (str(tube_number)))
-        for root in tube.roots:
+        for root_obj in tube_obj.roots:
             # write header
             col_indx = header_index['Tube#']
             col = openpyxl.cell.get_column_letter(col_indx)
             ws.cell('%s%s' % (col, row_index)).value = tube_number
             # build a dictionary of all the root items
-            root_dict = root.__dict__
+            root_dict = root_obj.__dict__
             for value in header:
                 if value in headertorootmapping:
                     root_value = root_dict[headertorootmapping[value]]
@@ -332,7 +332,7 @@ def write_out_data(output, tubes):
                 #
                 elif value == 'Birth Date':
                     birth_session = root_dict['birthSession']
-                    birth_date = tube.sessionDates[birth_session]
+                    birth_date = tube_obj.sessionDates[birth_session]
                     # specific to the data provided by MSS
                     birth_year = birth_date.split('.')[0]
                     col_indx = header_index[value]
@@ -345,7 +345,7 @@ def write_out_data(output, tubes):
                     # make sure root has kicked the bucket first.
                     if root_dict['censored'] == 0:
                         gone_session = root_dict['goneSession']
-                        gonedate = tube.sessionDates[gone_session]
+                        gonedate = tube_obj.sessionDates[gone_session]
                         # specific to data provided by MSS
                         goneyear = gonedate.split('.')[0]
                         col_indx = header_index[value]
@@ -416,10 +416,10 @@ def main(options):
             log.exception('Error occured attempting to get worksheet: {}'.format(sheet))
             # attempt to get the next worksheet
             continue
-        tube = process_worksheet(ws)
-        if not tube:
+        t = process_worksheet(ws)
+        if not t:
             log.error('Was not able to process the tube data from worksheet: {}'.format(sheet))
-        tubes.append(tube)
+        tubes.append(t)
     if not tubes:
         log.error('Was unable to get any tube data')
         sys.exit(-1)
