@@ -15,6 +15,9 @@ import sys
 
 import openpyxl
 
+import root
+import tube
+
 
 # logging config
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(levelname)s: %(message)s [%(filename)s:%(funcName)s]')
@@ -113,7 +116,7 @@ def process_worksheet(ws, exceptions_list=False):
         except KeyError:
             log.exception('No exceptions list found for tube number: %s' % (str(tube_number)))
     # basic information
-    tube = Tube(tube_number)
+    t = tube.Tube(tube_number)
     log.debug('Processing Data for tube #: %s' % (str(tube_number)))
     #
     root_data = build_root_data_table(ws, root_index_data)
@@ -160,35 +163,35 @@ def process_worksheet(ws, exceptions_list=False):
     # no longer need to keep this data in memory
     del root_data
     # need to know what session value to use for finalizing root values.
-    tube.maxSessionCount = max_session_count
-    tube.sessionDates = session_dates
+    t.maxSessionCount = max_session_count
+    t.sessionDates = session_dates
     # add each root to the tube
     log.debug('Inserting roots')
     final_roots = []
     for root in roots:
-        tube.insert_or_update_root(root)
+        t.insert_or_update_root(root)
         if root.session == max_session_count:
             final_roots.append(root)
     # finalize roots
     log.debug('Finalizing roots')
     for root in final_roots:
-        status = tube.finalize_root(root)
+        status = t.finalize_root(root)
         if not status:
             log.error('Failed to finalize root %s' % (str(root.identity)))
             log.error(root.identity)
 
     # need to calculate alive/dead tip numbers
-    tstats = tip_stats(tube)
-    for r in tube.roots:
+    tstats = tip_stats(t)
+    for r in t.roots:
         r.aliveTipsAtBirth = tstats[r.tipIdentity]
         if r.goneSession:
             gone_identity = r.goneSession, r.location
             r.aliveTipsAtGone = tstats[gone_identity]
-    tube.tipStats = tstats
+    t.tipStats = tstats
 
     log.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
-    log.debug('Found %s roots in tube' % (str(len(tube.roots))))
-    return tube
+    log.debug('Found %s roots in tube' % (str(len(t.roots))))
+    return t
 
 
 # tip stats code
@@ -272,25 +275,25 @@ def root_from_row(row, indexdict):
     root_name = row[indexdict['RootName']]
     location = row[indexdict['Location#']]
     birth_session = row[indexdict['BirthSession']]
-    root = Root(root_name, location, birth_session)
+    r = root.Root(root_name, location, birth_session)
     # check to see if anomalous root
     if row[indexdict['NumberOfTips']] == 1:
-        root.anomaly = False
+        r.anomaly = False
         if row[indexdict['TipLivStatus']].startswith('A'):
-            root.isAlive = 'A'
+            r.isAlive = 'A'
         if row[indexdict['TipLivStatus']].startswith('G'):
-            root.isAlive = 'G'
+            r.isAlive = 'G'
     else:
-        root.anomaly = True
-        root.isAlive = 'A'
+        r.anomaly = True
+        r.isAlive = 'A'
     # root metadata
-    root.session = row[indexdict['Session#']]
-    if root.isAlive.startswith('G'):
-        root.goneSession = root.session
+    r.session = row[indexdict['Session#']]
+    if r.isAlive.startswith('G'):
+        r.goneSession = r.session
     # order & diameter data
-    root.order = row[indexdict['RootNotes']]
-    root.avgDiameter = row[indexdict['TotAvgDiam(mm/10)']]
-    return root
+    r.order = row[indexdict['RootNotes']]
+    r.avgDiameter = row[indexdict['TotAvgDiam(mm/10)']]
+    return r
 
 
 def get_tube_number(ws):
