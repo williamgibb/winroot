@@ -65,6 +65,7 @@ def build_root_data_table(ws, rootindexdata):
 def process_worksheet(ws):
     """Process a worksheet, and build a tube object containing all the root data.
     This data can then be dumped out when all tubes have been processed."""
+    # XXX One place the root values are defined!
     root_index_data = {
         'RootName': 0,
         'Location#': 0,
@@ -78,7 +79,7 @@ def process_worksheet(ws):
     }
     tube_number = get_tube_number(ws)
     # basic information
-    t = tube.Tube(tube_number)
+    tube_obj = tube.Tube(tube_number)
     log.debug('Processing Data for tube #: %s' % (str(tube_number)))
     #
     root_data = build_root_data_table(ws, root_index_data)
@@ -112,35 +113,35 @@ def process_worksheet(ws):
     # no longer need to keep this data in memory
     del root_data
     # need to know what session value to use for finalizing root values.
-    t.maxSessionCount = max_session_count
-    t.sessionDates = session_dates
+    tube_obj.maxSessionCount = max_session_count
+    tube_obj.sessionDates = session_dates
     # add each root to the tube
     log.debug('Inserting roots')
     final_roots = []
     for root_obj in roots:
-        t.insert_or_update_root(root_obj)
+        tube_obj.insert_or_update_root(root_obj)
         if root_obj.session == max_session_count:
             final_roots.append(root_obj)
     # finalize roots
     log.debug('Finalizing roots')
     for root_obj in final_roots:
-        status = t.finalize_root(root_obj)
+        status = tube_obj.finalize_root(root_obj)
         if not status:
             log.error('Failed to finalize root %s' % (str(root_obj.identity)))
             log.error(root_obj.identity)
 
     # need to calculate alive/dead tip numbers
-    tstats = tip_stats(t)
-    for r in t.roots:
-        r.aliveTipsAtBirth = tstats[r.tipIdentity]
-        if r.goneSession:
-            gone_identity = r.goneSession, r.location
-            r.aliveTipsAtGone = tstats[gone_identity]
-    t.tipStats = tstats
+    tstats = tip_stats(tube_obj)
+    for root_obj in tube_obj.roots:
+        root_obj.aliveTipsAtBirth = tstats[root_obj.tipIdentity]
+        if root_obj.goneSession:
+            gone_identity = root_obj.goneSession, root_obj.location
+            root_obj.aliveTipsAtGone = tstats[gone_identity]
+    tube_obj.tipStats = tstats
 
     log.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
-    log.debug('Found %s roots in tube' % (str(len(t.roots))))
-    return t
+    log.debug('Found %s roots in tube' % (str(len(tube_obj.roots))))
+    return tube_obj
 
 
 # tip stats code
@@ -224,25 +225,25 @@ def root_from_row(row, indexdict):
     root_name = row[indexdict['RootName']]
     location = row[indexdict['Location#']]
     birth_session = row[indexdict['BirthSession']]
-    r = root.Root(root_name, location, birth_session)
+    root_obj = root.Root(root_name, location, birth_session)
     # check to see if anomalous root
     if row[indexdict['NumberOfTips']] == 1:
-        r.anomaly = False
+        root_obj.anomaly = False
         if row[indexdict['TipLivStatus']].startswith('A'):
-            r.isAlive = 'A'
+            root_obj.isAlive = 'A'
         if row[indexdict['TipLivStatus']].startswith('G'):
-            r.isAlive = 'G'
+            root_obj.isAlive = 'G'
     else:
-        r.anomaly = True
-        r.isAlive = 'A'
+        root_obj.anomaly = T
+        root_obj.isAlive = 'A'
     # root metadata
-    r.session = row[indexdict['Session#']]
-    if r.isAlive.startswith('G'):
-        r.goneSession = r.session
+    root_obj.session = row[indexdict['Session#']]
+    if root_obj.isAlive.startswith('G'):
+        root_obj.goneSession = root_obj.session
     # order & diameter data
-    r.order = row[indexdict['RootNotes']]
-    r.avgDiameter = row[indexdict['TotAvgDiam(mm/10)']]
-    return r
+    root_obj.order = row[indexdict['RootNotes']]
+    root_obj.avgDiameter = row[indexdict['TotAvgDiam(mm/10)']]
+    return root_obj
 
 
 def get_tube_number(ws):
@@ -277,6 +278,7 @@ def write_out_data(output, tubes):
     header data chosen by MSS
     """
     # setup header indices
+    # XXX One place the root values are defined!
     header = ['RootName', 'Tube#', 'Location#', 'BirthSession', 'Birth Date',
               'Birth Year', 'GoneSession', 'Gone Date', 'Gone Year', 'Censored',
               'AliveTipsAtBirth', 'AliveTipsAtGone', 'Avg Diameter (mm/10)',
@@ -285,6 +287,7 @@ def write_out_data(output, tubes):
     # header index specifically for use with get_column_letter()
     for i in header:
         header_index[i] = header.index(i) + 1
+    # XXX One place the root values are defined!
     headertorootmapping = {
         'RootName': 'rootName',
         'Location#': 'location',
