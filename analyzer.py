@@ -234,7 +234,7 @@ def root_from_row(row, indexdict):
         if row[indexdict['TipLivStatus']].startswith('G'):
             root_obj.isAlive = 'G'
     else:
-        root_obj.anomaly = T
+        root_obj.anomaly = True
         root_obj.isAlive = 'A'
     # root metadata
     root_obj.session = row[indexdict['Session#']]
