@@ -77,7 +77,7 @@ def build_root_data_table(ws, rootindexdata):
         rootindexdata[key] = index
     endof_rootdata = get_index_at_null(ws.columns[0])
     if not endof_rootdata:
-        logging.error('Failed to find end of root data.')
+        log.error('Failed to find end of root data.')
         return False
     # this slice includes the header row in rootData.  This lets us
     # rebuild indices, since the dict iterator is not sorted
@@ -114,7 +114,7 @@ def process_worksheet(ws, exceptions_list=False):
             log.exception('No exceptions list found for tube number: %s' % (str(tube_number)))
     # basic information
     tube = Tube(tube_number)
-    logging.debug('Processing Data for tube #: %s' % (str(tube_number)))
+    log.debug('Processing Data for tube #: %s' % (str(tube_number)))
     #
     root_data = build_root_data_table(ws, root_index_data)
     if not root_data:
@@ -130,7 +130,7 @@ def process_worksheet(ws, exceptions_list=False):
         root_index_data[key] = index
     # this loop will not handle exceptional roots, it just builts a list of root 
     # object for each row of root data
-    logging.debug('Building roots from root_data')
+    log.debug('Building roots from root_data')
     max_session_count = 1
     session_dates = {}
     roots = []
@@ -153,28 +153,28 @@ def process_worksheet(ws, exceptions_list=False):
         # process session statistics
         if root.session > max_session_count:
             max_session_count = root.session
-            logging.debug('MaxSessionCount updated to %s' % (str(max_session_count)))
+            log.debug('MaxSessionCount updated to %s' % (str(max_session_count)))
         if root.session not in session_dates:
             session_dates[root.session] = row[root_index_data['Date']]
-            logging.debug('Inserted session %s- Date %s ' % (str(root.session), session_dates[root.session],))
+            log.debug('Inserted session %s- Date %s ' % (str(root.session), session_dates[root.session],))
     # no longer need to keep this data in memory
     del root_data
     # need to know what session value to use for finalizing root values.
     tube.maxSessionCount = max_session_count
     tube.sessionDates = session_dates
     # add each root to the tube
-    logging.debug('Inserting roots')
+    log.debug('Inserting roots')
     final_roots = []
     for root in roots:
         tube.insert_or_update_root(root)
         if root.session == max_session_count:
             final_roots.append(root)
     # finalize roots
-    logging.debug('Finalizing roots')
+    log.debug('Finalizing roots')
     for root in final_roots:
         status = tube.finalize_root(root)
         if not status:
-            logging.error('Failed to finalize root %s' % (str(root.identity)))
+            log.error('Failed to finalize root %s' % (str(root.identity)))
             log.error(root.identity)
 
     # need to calculate alive/dead tip numbers
@@ -186,8 +186,8 @@ def process_worksheet(ws, exceptions_list=False):
             r.aliveTipsAtGone = tstats[gone_identity]
     tube.tipStats = tstats
 
-    logging.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
-    logging.debug('Found %s roots in tube' % (str(len(tube.roots))))
+    log.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
+    log.debug('Found %s roots in tube' % (str(len(tube.roots))))
     return tube
 
 
@@ -417,7 +417,7 @@ def write_out_data(output, tubes):
     # process the root data from each tube
     for tube in tubes:
         tube_number = tube.tubeNumber
-        logging.debug('Writing out data for tube#: %s' % (str(tube_number)))
+        log.debug('Writing out data for tube#: %s' % (str(tube_number)))
         for root in tube.roots:
             # write header
             col_indx = header_index['Tube#']
@@ -483,17 +483,17 @@ def main(options):
 
     # file path verification and options handling
     if not options.verbose:
-        logging.info('Output will not be verbose')
+        log.info('Output will not be verbose')
         logging.disable(logging.DEBUG)
 
     if not os.path.isfile(options.src_file):
-        logging.error('specified source is not a file')
+        log.error('specified source is not a file')
         sys.exit(-1)
 
     if os.path.exists(options.output):
-        logging.warning('Specified output file already exists.\n')
+        log.warning('Specified output file already exists.\n')
         if not query_yes_no('Do you want to overwrite that file?', 'no'):
-            logging.info('Exiting')
+            log.info('Exiting')
             sys.exit(-1)
 
     # open up src file
@@ -507,8 +507,8 @@ def main(options):
     # get root data
     sheets = get_root_sheets(wb)
     if not sheets:
-        logging.error('Could not find any WinRhizotron data sheets in the src file')
-        logging.error('Make sure your workbook worksheets end in the string "Root Synth"')
+        log.error('Could not find any WinRhizotron data sheets in the src file')
+        log.error('Make sure your workbook worksheets end in the string "Root Synth"')
         sys.exit(-1)
 
     tubes = []
@@ -525,7 +525,7 @@ def main(options):
             log.error('Was not able to process the tube data from worksheet: {}'.format(sheet))
         tubes.append(tube)
     if not tubes:
-        logging.error('Was unable to get any tube data')
+        log.error('Was unable to get any tube data')
         sys.exit(-1)
 
     # write out the data for each tube into the new worksheet
@@ -533,10 +533,10 @@ def main(options):
     if foo:
         log.info('Sucesfully wrote out data to {}'.format(options.output))
     else:
-        logging.info('Did not write data out.')
+        log.info('Did not write data out.')
         sys.exit(-1)
 
-    logging.info('Done processing all data')
+    log.info('Done processing all data')
     sys.exit(0)
 
 

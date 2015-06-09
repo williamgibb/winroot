@@ -43,19 +43,19 @@ class Tube(object):
                 # If there was a change, update the root attributes
                 if existingRoot.isAlive.startswith('A') and root.isAlive.startswith('G'):
                     # root changed from A to G
-                    logging.debug('Changing root from A to G')
+                    log.debug('Changing root from A to G')
                     existingRoot.goneSession = root.goneSession
                     existingRoot.isAlive = root.isAlive
                 elif existingRoot.isAlive.startswith('G') and root.isAlive.startswith('A'):
                     # root changed from G to A
-                    logging.debug('Changing root from G to A')
+                    log.debug('Changing root from G to A')
                     existingRoot.goneSession = ''
                     existingRoot.isAlive = root.isAlive
         # add the root to the tube
         if insert:
             # possible to insert a root at the last session.  likely rare though.
             # need to finalize this root before adding it into the tube.
-            logging.debug('Adding root to tube %s' % (str(root.identity)))
+            log.debug('Adding root to tube %s' % (str(root.identity)))
             self.add_root(root)
         return True
 
