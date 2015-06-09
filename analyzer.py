@@ -93,7 +93,7 @@ def build_root_data_table(ws, rootindexdata):
     return rootdata
 
 
-def process_worksheet(ws, exceptions_list=False):
+def process_worksheet(ws):
     """Process a worksheet, and build a tube object containing all the root data.
     This data can then be dumped out when all tubes have been processed."""
     root_index_data = {
@@ -108,13 +108,6 @@ def process_worksheet(ws, exceptions_list=False):
         'Date': 0,
     }
     tube_number = get_tube_number(ws)
-    # exception handling
-    exceptions = None
-    if exceptions_list:
-        try:
-            exceptions = exceptions_list[tube_number]
-        except KeyError:
-            log.exception('No exceptions list found for tube number: %s' % (str(tube_number)))
     # basic information
     t = tube.Tube(tube_number)
     log.debug('Processing Data for tube #: %s' % (str(tube_number)))
@@ -138,19 +131,6 @@ def process_worksheet(ws, exceptions_list=False):
     session_dates = {}
     roots = []
     for row in root_data[1:]:
-        if exceptions:
-            # noinspection PyUnusedLocal
-            for i in exceptions:
-                # noinspection PyPep8Naming,PyUnusedLocal
-                rootName = row[root_index_data['RootName']]
-                # noinspection PyPep8Naming,PyUnusedLocal
-                rootLocation = row[root_index_data['Location#']]
-                # noinspection PyPep8Naming,PyUnusedLocal
-                rootSession = row[root_index_data['Sesssion#']]
-                #
-                # EXCEPTION ROOT HANDLING WOULD WOULD GO HERE
-                #
-                pass
         root = root_from_row(row, root_index_data)
         roots.append(root)
         # process session statistics
@@ -547,8 +527,6 @@ def root_options():
     parser = argparse.ArgumentParser(prog=__name__)
     parser.add_argument('-s', '--source', dest='src_file', required=True, type=str, action='store',
                         help='Source xlsx file to process')
-    parser.add_argument('-e', '--exceptions', dest='exceptions', type=str, action='store', default=None,
-                        help='A xlsx file containing root rewrite data for shifted roots')
     parser.add_argument('-o', '--output', dest='output', required=True, type=str, action='store',
                         help='Define the output file (xlsx)')
     parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
