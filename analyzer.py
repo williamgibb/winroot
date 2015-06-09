@@ -269,7 +269,6 @@ def get_root_sheets(wb):
     return root_sheets
 
 
-
 # main function support
 def write_out_data(output, tubes):
     """
