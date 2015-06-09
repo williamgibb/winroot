@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 '''
-root.py
+analyzer.py
 
 library for handling root data from winrhizotron
 
