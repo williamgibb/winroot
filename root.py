@@ -3,10 +3,16 @@
 
 """
 from __future__ import print_function
+import collections
 import logging
 
 log = logging.getLogger(__name__)
 __author__ = 'wgibb'
+
+
+# Named tuples allow for the analyzer to create values for uniquely identifying roots if needed.
+RootIdentity = collections.namedtuple('RootIdentity', ['rootname', 'location', 'birthsession'])
+TipIdentity = collections.namedtuple('TipIdentity', ['birthsession', 'location'])
 
 
 class Root(object):
@@ -14,8 +20,8 @@ class Root(object):
         self.rootName = rootname
         self.location = location
         self.birthSession = birthsession
-        self.identity = (rootname, location, birthsession)
-        self.tipIdentity = (birthsession, location)
+        self.identity = RootIdentity(rootname=rootname, location=location, birthsession=birthsession)
+        self.tipIdentity = TipIdentity(birthsession=birthsession, location=location)
         self.tube = ''
         self.session = ''
         self.goneSession = ''
