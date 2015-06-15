@@ -302,6 +302,7 @@ def write_out_data(output, tubes):
     # write out header row
     for i in header:
         col_indx = header_index[i]
+        # noinspection PyUnresolvedReferences
         col = openpyxl.cell.get_column_letter(col_indx)
         ws.cell('%s%s' % (col, row_index)).value = i
     row_index += 1
@@ -312,6 +313,7 @@ def write_out_data(output, tubes):
         for root_obj in tube_obj:
             # write header
             col_indx = header_index['Tube#']
+            # noinspection PyUnresolvedReferences
             col = openpyxl.cell.get_column_letter(col_indx)
             ws.cell('%s%s' % (col, row_index)).value = tube_number
             # build a dictionary of all the root items
@@ -320,6 +322,7 @@ def write_out_data(output, tubes):
                 if value in headertorootmapping:
                     root_value = root_dict[headertorootmapping[value]]
                     col_indx = header_index[value]
+                    # noinspection PyUnresolvedReferences
                     col = openpyxl.cell.get_column_letter(col_indx)
                     ws.cell('%s%s' % (col, row_index)).value = root_value
                 #
@@ -331,9 +334,11 @@ def write_out_data(output, tubes):
                     # specific to the data provided by MSS
                     birth_year = birth_date.split('.')[0]
                     col_indx = header_index[value]
+                    # noinspection PyUnresolvedReferences
                     col = openpyxl.cell.get_column_letter(col_indx)
                     ws.cell('%s%s' % (col, row_index)).value = birth_date
                     col_indx = header_index['Birth Year']
+                    # noinspection PyUnresolvedReferences
                     col = openpyxl.cell.get_column_letter(col_indx)
                     ws.cell('%s%s' % (col, row_index)).value = birth_year
                 elif value == 'Gone Date':
@@ -344,9 +349,11 @@ def write_out_data(output, tubes):
                         # specific to data provided by MSS
                         goneyear = gonedate.split('.')[0]
                         col_indx = header_index[value]
+                        # noinspection PyUnresolvedReferences
                         col = openpyxl.cell.get_column_letter(col_indx)
                         ws.cell('%s%s' % (col, row_index)).value = gonedate
                         col_indx = header_index['Gone Year']
+                        # noinspection PyUnresolvedReferences
                         col = openpyxl.cell.get_column_letter(col_indx)
                         ws.cell('%s%s' % (col, row_index)).value = goneyear
                 elif value not in ['Birth Year', 'Gone Year', 'Tube#']:
