@@ -22,6 +22,9 @@ class Tube(object):
         for root in self.roots:
             yield root
 
+    def __len__(self):
+        return len(self.roots)
+
     def add_root(self, root):
         root.tube = self.tubeNumber
         self.roots.append(root)
