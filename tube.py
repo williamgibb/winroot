@@ -18,17 +18,9 @@ class Tube(object):
         self.sessionDates = {}
         self.index = 0
 
-    # this iter code is broken and i'm not certain why
     def __iter__(self):
-        return self
-
-    def next(self):
-        if self.index == len(self.roots):
-            self.index = 0
-            raise StopIteration
-        root = self.roots[self.index]
-        self.index += 1
-        return root
+        for root in self.roots:
+            yield root
 
     def add_root(self, root):
         root.tube = self.tubeNumber
