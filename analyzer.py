@@ -25,14 +25,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(levelname)s: %(m
 log = logging.getLogger(__name__)
 
 
-def get_test_ws():
-    wb = openpyxl.load_workbook(filename=r'unedited.xlsx')
-    ws = wb.get_sheet_by_name('T008 Root Synth')
-    return ws
-
-
 ''' helper functions for finding the import values from the root data table'''
-
 
 def build_root_data_table(ws, rootindexdata):
     """ BUILD A LIST OF DATA REPRESENTING EACH ROW IN WORKSHEET UP
