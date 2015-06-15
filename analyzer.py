@@ -132,15 +132,15 @@ def process_worksheet(ws):
 
     # need to calculate alive/dead tip numbers
     tstats = tip_stats(tube_obj)
-    for root_obj in tube_obj.roots:
+    for root_obj in tube_obj:
         root_obj.aliveTipsAtBirth = tstats[root_obj.tipIdentity]
         if root_obj.goneSession:
             gone_identity = root_obj.goneSession, root_obj.location
             root_obj.aliveTipsAtGone = tstats[gone_identity]
     tube_obj.tipStats = tstats
 
-    log.debug('Identified %s roots in sheet: %s' % (str(len(roots)), ws.title))
-    log.debug('Found %s roots in tube' % (str(len(tube_obj.roots))))
+    log.debug('Identified {} roots in sheet: {}'.format(len(roots), ws.title))
+    log.debug('Found {} roots in tube'.format(len(tube_obj)))
     return tube_obj
 
 
@@ -148,7 +148,7 @@ def process_worksheet(ws):
 
 def calculate_alive_tip_stats(tube_obj):
     alive_tips = {}
-    for existingRoot in tube_obj.roots:
+    for existingRoot in tube_obj:
         tip_id = existingRoot.tipIdentity
         if tip_id not in alive_tips:
             alive_tips[tip_id] = 1
@@ -160,7 +160,7 @@ def calculate_alive_tip_stats(tube_obj):
 def calculate_gone_tip_stats(din, tube_obj):
     d = {}
     for i, c in sorted(din.items()):
-        for root_obj in tube_obj.roots:
+        for root_obj in tube_obj:
             if (root_obj.tipIdentity == i) and root_obj.goneSession:
                 gi = root_obj.goneSession, root_obj.location
                 if gi not in d:
@@ -176,9 +176,9 @@ def tip_stats(tube_obj):
     gone_stats = calculate_gone_tip_stats(alive_stats, tube_obj)
     # build a list of all root locations
     locations = []
-    for r in tube_obj.roots:
-        if r.location not in locations:
-            locations.append(r.location)
+    for root_obj in tube_obj:
+        if root_obj.location not in locations:
+            locations.append(root_obj.location)
     # build a mapping of sessions to lists of locations
     loc_sessions = {}
     for L in locations:
@@ -316,7 +316,7 @@ def write_out_data(output, tubes):
     for tube_obj in tubes:
         tube_number = tube_obj.tubeNumber
         log.debug('Writing out data for tube#: %s' % (str(tube_number)))
-        for root_obj in tube_obj.roots:
+        for root_obj in tube_obj:
             # write header
             col_indx = header_index['Tube#']
             col = openpyxl.cell.get_column_letter(col_indx)
