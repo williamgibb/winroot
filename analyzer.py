@@ -69,9 +69,9 @@ class Analyzer(object):
             if tn not in self.synthesis_data:
                 self.synthesis_data[tn] = {}
             sd = self.synthesis_data.get(tn)
-            root_identity = root.RootIdentity(rootname=d.get('rootname'),
-                                              location=d.get('location'),
-                                              birthsession=d.get('birthsession'))
+            root_identity = root.RootIdentity(rootname=d.get('RootName'),
+                                              location=d.get('Location#'),
+                                              birthsession=d.get('BirthSession'))
             if root_identity in sd:
                 raise DataError('Duplicate root encountered in synthesis data: {}'.format(root_identity))
             sd[root_identity] = d
@@ -171,6 +171,7 @@ class Analyzer(object):
             # Insert the sythesis data (containing the tip stats) into the roots.
             sdata = self.synthesis_data.get(tn)
             tube_obj.insert_synthesis_data(sdata)
+            self.tubes.append(tube_obj)
 
     def write(self, fp):
         if not self.tubes:
