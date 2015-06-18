@@ -103,17 +103,18 @@ def stats(wb, sheetlist, value, verbose=False):
 
 def build_data_from_fields(ws, fields):
     header = ws.rows[0]
+    header_index = {}
     ret = []
-    for key in fields.required_fields:
+    for key in fields.required_attributes:
         index = get_index_by_value(header, key)
         if not index:
             raise DataError('Failed to obtain header value: {}'.format(key))
-        fields.required_fields[key] = index
+        header_index[key] = index
     ws_end = get_index_at_null(ws.collumns[0])
     if not ws_end:
         raise DataError('Failed to find end of the ws data')
     # This skips the header row, as we are embedding all of the required data into dictionaries.
     for row in ws.rows[1:ws_end]:
-        d = {key: row[index] for key, index in fields.required_fields.items()}
+        d = {key: row[index] for key, index in header_index.items()}
         ret.append(d)
     return ret

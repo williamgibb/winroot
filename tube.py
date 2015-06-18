@@ -26,7 +26,7 @@ class Tube(object):
         return len(self.roots)
 
     def add_root(self, root):
-        root.tube = self.tubeNumber
+        root.set('Tube#', self.tubeNumber)
         self.roots.append(root)
 
     def insert_or_update_root(self, root):
@@ -39,12 +39,12 @@ class Tube(object):
                 if existingRoot.isAlive.startswith('A') and root.isAlive.startswith(('G','D')):
                     # root changed from A to G
                     log.debug('Changing root from A to {}'.format(root.isAlive))
-                    existingRoot.goneSession = root.goneSession
+                    existingRoot.set('DeathSession', root.get('DeathSession'))
                     existingRoot.isAlive = root.isAlive
                 elif existingRoot.isAlive.startswith(('G','D')) and root.isAlive.startswith('A'):
                     # root changed from G to A
                     log.debug('Changing root from {} to {}'.format(existingRoot.isAlive, root.isAlive))
-                    existingRoot.goneSession = ''
+                    existingRoot.set('DeathSession', '')
                     existingRoot.isAlive = root.isAlive
         # add the root to the tube
         if insert:
@@ -54,16 +54,17 @@ class Tube(object):
             self.add_root(root)
         return True
 
-    def finalize_root(self, root):
+    def finalize_root(self, root_obj):
         finalized = False
         for existingRoot in self:
-            if root.identity == existingRoot.identity:
-                if root.session == self.maxSessionCount:
-                    existingRoot.highestOrder = root.order
+            if root_obj.identity == existingRoot.identity:
+                if root_obj.get('Session#') == self.maxSessionCount:
+                    existingRoot.highestOrder = root_obj.get('Order')
                 if existingRoot.isAlive.startswith('A'):
-                    existingRoot.goneSession = 0
+                    existingRoot.set('DeathSession', 0)
                     existingRoot.censored = 1
-                if existingRoot.isAlive.startswith('G'):
+                # XXX Icky!
+                if existingRoot.isAlive.startswith(('D', 'G')):
                     existingRoot.censored = 0
                 finalized = True
         return finalized
@@ -71,5 +72,5 @@ class Tube(object):
     def insert_synthesis_data(self, sdata):
         for root_obj in self:
             sd = sdata.get(root_obj.identity)
-            root_obj.aliveTipsAtBirth = sd.get('AliveTipsAtBirth')
-            root_obj.aliveTipsAtGone = sd.get('AliveTipsAtDeath')
+            for k, v in sd.items():
+                root_obj.set(k, v)

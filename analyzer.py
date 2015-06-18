@@ -60,7 +60,6 @@ class Analyzer(object):
             raise AnalyzerError('Workbook is missing expected sheet names {}'.format(list(self.required_sheet_names)))
         self.parse(wb)
 
-
     def _process_synthesis_table(self, ws):
         synthesis_data = utility.build_data_from_fields(ws, self.synthesis_fields)
         for d in synthesis_data:
@@ -90,35 +89,44 @@ class Analyzer(object):
         return True
 
     def _root_from_dict(self, d):
-        root_id = root.RootIdentity(rootname=d.get('RootName'),
-                                    location=d.get('Location#'),
-                                    birthsession=d.get('BirthSession'))
-        root_obj = root.Root(rootname=d.get('RootName'),
+
+        attr_map = dict(self.root_fields.required_attributes)
+        for k, v in self.synthesis_fields.required_attributes.items():
+            if k in attr_map:
+                continue
+            attr_map[k] = v
+
+        root_obj = root.Root(attr_map=attr_map,
+                             rootname=d.get('RootName'),
                              location=d.get('Location#'),
                              birthsession=d.get('BirthSession'))
-        # Insert the date
-        root_obj.date = d.get('Date')
+
         # Check for anomalous roots
         num_tips = d.get('NumberOfTips')
-        tip_liv_status = d.get('TipLiveStatus')
+        tip_liv_status = d.get('TipLivStatus')
         if num_tips == 1:
             root_obj.anomaly = False
             if tip_liv_status.startswith('A'):
                 root_obj.isAlive = 'A'
-            elif tip_liv_status.startswith('G'):
+            # XXX Configurable status!
+            elif tip_liv_status.startswith(('D', 'G')):
                 root_obj.isAlive = 'G'
             else:
-                raise DataError('Unknown tip_liv_status [{}][{}]'.format(root_id, tip_liv_status))
+                raise DataError('Unknown tip_liv_status [{}][{}]'.format(root_obj.identity, tip_liv_status))
         else:
             root_obj.anomaly = True
             root_obj.isAlive = 'A'
-        root_obj.session = d.get('Session#')
+        # Set required attributes
+        for k in self.root_fields.required_attributes:
+            root_obj.set(k, d.get(k))
         # Check to see if the current root is gone
-        if root_obj.isAlive.startswith('G'):
-            root_obj.goneSession = root_obj.session
+        # XXX Configurable value!
+        if root_obj.isAlive.startswith(('D','G')):
+            # XXX Eww hardcorded attribute access!
+            root_obj.DeathSession = root_obj.get('Session#')
         # Now we add arbitrary keys to the root.
-        for key, attr in self.root_fields.custom_attributes:
-            root_obj.set_custom_field(key, d.get(attr))
+        for key in self.root_fields.custom_attributes:
+            root_obj.set(key, d.get(key))
         return root_obj
 
     def parse(self, wb):
@@ -137,17 +145,18 @@ class Analyzer(object):
             raw_roots = self.root_data.get(tn)
 
             for root_obj in raw_roots:
-                if root_obj.session > tube_obj.maxSessionCount:
-                    tube_obj.maxSessionCount = root_obj.session
+                rsession = root_obj.get('Session#')
+                if rsession > tube_obj.maxSessionCount:
+                    tube_obj.maxSessionCount = rsession
                     log.debug('Max session count updated to {}'.format(tube_obj.maxSessionCount))
-                if root_obj.session not in tube_obj.sessionDates:
-                    tube_obj.sessionDates[root_obj.session] = root_obj.date
-                    log.debug('Inserted session {} - Date {}'.format(root_obj.session, root_obj.date))
+                if rsession not in tube_obj.sessionDates:
+                    tube_obj.sessionDates[rsession] = root_obj.get('Date')
+                    log.debug('Inserted session {} - Date {}'.format(rsession, root_obj.get('Date')))
             final_roots = []
             log.debug('Inserting roots into tube [{}]'.format(tn))
             for root_obj in raw_roots:
                 tube_obj.insert_or_update_root(root_obj)
-                if root_obj.session == tube_obj.maxSessionCount:
+                if root_obj.get('Session#') == tube_obj.maxSessionCount:
                     final_roots.append(root_obj)
             log.debug('Finalizing roots')
             for root_obj in final_roots:
@@ -164,10 +173,14 @@ class Analyzer(object):
             raise AnalyzerError('No tubes available to serialize data from')
 
         header = sorted(self.root_fields.identity_attributes.keys())
-        header.extend(sorted([k for k in self.root_fields.base_attributes.keys() if k not in header]))
-        header.extend(sorted([k for k in self.root_fields.custom_attributes.keys() if k not in header]))
-        header.extend(sorted([k for k in self.synthesis_fields.synthesis_fields.keys() if k not in header]))
+        header.extend(sorted([k for k in self.root_fields.required_attributes.keys() if k not in header]))
+        header.extend(sorted([k for k in self.synthesis_fields.required_attributes.keys() if k not in header]))
         log.debug('Header row is {}'.format(header))
+        # XXX Header needs to be extended to support the following values:
+        # isAlive
+        # censored
+        # highestOrder
+        # anomaly
 
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
@@ -183,12 +196,10 @@ class Analyzer(object):
             for root_obj in tube_obj:
                 for i, v in enumerate(header, 1):
                     col = openpyxl.cell.get_column_letter(i)
-                    if v in self.root_fields.base_attributes:
-                        attr = self.root_fields.base_attributes.get(v)
-                    elif v in self.root_fields.custom_attributes:
-                        attr = self.root_fields.custom_attributes.get(v)
-                    elif v in self.synthesis_fields.syn_attributes:
-                        attr = self.synthesis_fields.syn_attributes.get(v)
+                    if v in self.root_fields.required_attributes:
+                        attr = self.root_fields.required_attributes.get(v)
+                    elif v in self.synthesis_fields.required_attributes:
+                        attr = self.synthesis_fields.required_attributes.get(v)
                     cv = getattr(root_obj, attr, 'NO VALUE')
                     ws.cell('{x}{y}'.format(x=col, y=row_index)).value = cv
                 row_index = row_index + 1
@@ -221,7 +232,9 @@ def main(options):
             log.info('Exiting')
             sys.exit(-1)
 
-
+    analyzer = Analyzer()
+    analyzer.insert(options.src_file)
+    analyzer.write(options.output)
 
     log.info('Done processing all data')
     sys.exit(0)

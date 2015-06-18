@@ -23,7 +23,8 @@ replacement_str = 'X'
 class IdentityFields(object):
     identity_fields = ['RootName',
                        'Location#',
-                       'BirthSession']
+                       'BirthSession',
+                       'Tube#']
 
     identity_attributes = {}
     for k in identity_fields:
@@ -39,18 +40,17 @@ class IdentityFields(object):
 
 class RootDataFields(IdentityFields):
     def __init__(self, additional_fields=None):
-        self.base_fields = ['Tube#',
-                            'Session#',
+        self.base_fields = ['Session#',
+                            'DeathSession',
                             'TipLivStatus',
                             'NumberOfTips',
-                            'Date']
+                            'Date',
+                            'Order']
 
-        self.required_fields = {k:0 for k in IdentityFields.identity_fields}
-        for k in self.base_fields:
-            self.required_fields[k] = 0
+        self.required_attributes = {k:v for k, v in IdentityFields.identity_attributes.items()}
 
         self.base_attributes = {}
-        for k in self.required_fields:
+        for k in self.base_fields:
             new_key = str(k)
             if not re.search(valid_python_identifer, new_key):
                 new_key = re.sub(invalid_python_identifiers, replacement_str, new_key)
@@ -66,11 +66,10 @@ class RootDataFields(IdentityFields):
         if additional_fields:
             self.additional_fields = additional_fields
             for k, v in self.additional_fields.items():
-                if k in self.required_fields:
+                if k in self.required_attributes:
                     raise FieldsError('Additional field duplicates a required field [{}]'.format(k))
                 if v not in [ROOT_BIRTH, ROOT_DEATH]:
                     raise FieldsError('Unknown custom field propogation value [{}][{}]'.format(k, v))
-                self.required_fields[k] = 0
                 new_key = str(k)
                 if not re.search(valid_python_identifer, new_key):
                     new_key = re.sub(invalid_python_identifiers, replacement_str, new_key)
@@ -79,23 +78,16 @@ class RootDataFields(IdentityFields):
                     if not re.search(valid_python_identifer, new_key):
                         raise FieldsError('Unable to scrub custom field into a valid python identifier [{}]'.format(k))
                 self.custom_attributes[k] = new_key
-
-
-
+                self.required_attributes[k] = new_key
 
 
 class SynthesisDataFields(IdentityFields):
     def __init__(self):
-        self.synthesis_fields = ['DeathSession',
-                                'AliveTipsAtBirth',
-                                'AliveTipsAtDeath',
-                                'Tube#']
-        self.required_fields = {k:0 for k in IdentityFields.identity_fields}
-        for k in self.synthesis_fields:
-            self.required_fields[k] = 0
+        self.synthesis_fields = ['AliveTipsAtBirth',
+                                'AliveTipsAtDeath',]
+        self.required_attributes = {k: v for k, v in IdentityFields.identity_attributes.items()}
 
-        self.syn_attributes = {}
-        for k in self.required_fields:
+        for k in self.synthesis_fields:
             new_key = str(k)
             if not re.search(valid_python_identifer, new_key):
                 new_key = re.sub(invalid_python_identifiers, replacement_str, new_key)
@@ -103,4 +95,4 @@ class SynthesisDataFields(IdentityFields):
                     new_key = ''.join([replacement_str, new_key])
                 if not re.search(valid_python_identifer, new_key):
                     raise FieldsError('Unable to scrub synthesis field into a valid python identifier [{}]'.format(k))
-            self.syn_attributes[k] = new_key
+            self.required_attributes[k] = new_key
