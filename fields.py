@@ -49,7 +49,6 @@ class RootDataFields(IdentityFields):
 
         self.required_attributes = {k:v for k, v in IdentityFields.identity_attributes.items()}
 
-        self.base_attributes = {}
         for k in self.base_fields:
             new_key = str(k)
             if not re.search(valid_python_identifer, new_key):
@@ -58,7 +57,7 @@ class RootDataFields(IdentityFields):
                     new_key = ''.join([replacement_str, new_key])
                 if not re.search(valid_python_identifer, new_key):
                     raise FieldsError('Unable to scrub required field into a valid python identifier [{}]'.format(k))
-            self.base_attributes[k] = new_key
+            self.required_attributes[k] = new_key
 
         self.additional_fields = {}
         self.custom_attributes = {}
