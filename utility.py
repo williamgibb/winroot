@@ -73,17 +73,6 @@ def get_index_by_value(cell_list, value):
     return index
 
 
-
-def get_index_at_null(cell_list):
-    """ get the index value for the first NoneType object present in cell list"""
-    index = False
-    for cell in cell_list:
-        if not cell.value:
-            index = cell_list.index(cell)
-            break
-    return index
-
-
 def stats(wb, sheetlist, value, verbose=False):
     """generate counts of different values in a given column, based on column name
     this is done across a workbook"""
@@ -101,20 +90,21 @@ def stats(wb, sheetlist, value, verbose=False):
                     log.info('Found new cell.value in sheet: {}'.format(sheet))
     return dicty
 
+
 def build_data_from_fields(ws, fields):
     header = ws.rows[0]
     header_index = {}
     ret = []
     for key in fields.required_attributes:
         index = get_index_by_value(header, key)
-        if not index:
+        if index is False:
             raise DataError('Failed to obtain header value: {}'.format(key))
         header_index[key] = index
-    ws_end = get_index_at_null(ws.collumns[0])
+    ws_end = len(ws.columns[0]) - 1
     if not ws_end:
         raise DataError('Failed to find end of the ws data')
     # This skips the header row, as we are embedding all of the required data into dictionaries.
     for row in ws.rows[1:ws_end]:
-        d = {key: row[index] for key, index in header_index.items()}
+        d = {key: row[index].value for key, index in header_index.items()}
         ret.append(d)
     return ret
