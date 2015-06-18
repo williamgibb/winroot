@@ -50,17 +50,19 @@ class Analyzer(object):
 
 
     def insert(self, fp):
+        log.info('Opening workbook [{}]'.format(fp))
         try:
             wb = openpyxl.load_workbook(filename=fp)
         except:
             log.exception('')
             raise AnalyzerError('Failed to load workbook [{}]'.format(fp))
         sheets = set(wb.get_sheet_names())
-        if not sheets.issuperset(set(self.required_sheet_names.vales())):
+        if not sheets.issuperset(set(self.required_sheet_names.values())):
             raise AnalyzerError('Workbook is missing expected sheet names {}'.format(list(self.required_sheet_names)))
         self.parse(wb)
 
     def _process_synthesis_table(self, ws):
+        log.info('Extracting synthesis data')
         synthesis_data = utility.build_data_from_fields(ws, self.synthesis_fields)
         for d in synthesis_data:
             tn = d.get('Tube#')
@@ -76,8 +78,9 @@ class Analyzer(object):
         return True
 
     def _process_root_table(self, ws):
+        log.info('Extracting root table')
         root_data = utility.build_data_from_fields(ws, self.root_fields)
-        log.debug('Building roots from root_data')
+        log.info('Building roots from root_data')
         for d in root_data:
             tn = d.get('Tube#')
             # XXX Use collections.Defaultdict
@@ -130,6 +133,7 @@ class Analyzer(object):
         return root_obj
 
     def parse(self, wb):
+        log.debug('Parsing workbook')
         # First, we want to grab data from the synthesis table though.
         root_sheet = wb.get_sheet_by_name(self.required_sheet_names.get('root_data'))
         synthesis_sheet = wb.get_sheet_by_name(self.required_sheet_names.get('synthesis_data'))
