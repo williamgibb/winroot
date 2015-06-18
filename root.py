@@ -16,20 +16,38 @@ TipIdentity = collections.namedtuple('TipIdentity', ['birthsession', 'location']
 
 
 class Root(object):
+    PROTECTED_FIELDS = ['rootName',
+                        'location',
+                        'birthsesssion',
+                        'identity',
+                        'tipIdentity',
+                        'tube',
+                        'session',
+                        'goneSession',
+                        'anomaly',
+                        'order',
+                        'aliveTipsAtBirth',
+                        'aliveTipsAtGone',
+                        'isAlive',
+                        'PROTECTED_FIELDS']
     def __init__(self, rootname, location, birthsession):
         self.rootName = rootname
         self.location = location
         self.birthSession = birthsession
         self.identity = RootIdentity(rootname=rootname, location=location, birthsession=birthsession)
         self.tipIdentity = TipIdentity(birthsession=birthsession, location=location)
+        self.date = ''
         self.tube = ''
         self.session = ''
         self.goneSession = ''
         self.anomaly = ''
         self.order = ''
-        self.highestOrder = ''
         self.censored = ''
         self.aliveTipsAtBirth = ''
         self.aliveTipsAtGone = ''
-        self.avgDiameter = ''
         self.isAlive = ''
+
+    def set_custom_field(self, key, value, force=False):
+        if key in self.PROTECTED_FIELDS and not force:
+            raise AttributeError('Cannot set a protected field as a custom value')
+        setattr(self, key, value)
