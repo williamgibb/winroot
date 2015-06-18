@@ -6,6 +6,7 @@ from __future__ import print_function
 import logging
 import sys
 
+from errors import DataError
 log = logging.getLogger(__name__)
 __author__ = 'wgibb'
 
@@ -33,6 +34,7 @@ def query_yes_no(question, default="yes"):
 
     while True:
         sys.stdout.write(question + prompt)
+        # XXX not python3 friendly.
         choice = raw_input().lower()
         if default is not None and choice == '':
             return valid[default]
@@ -98,3 +100,20 @@ def stats(wb, sheetlist, value, verbose=False):
                 if verbose:
                     log.info('Found new cell.value in sheet: {}'.format(sheet))
     return dicty
+
+def build_data_from_fields(ws, fields):
+    header = ws.rows[0]
+    ret = []
+    for key in fields.required_fields:
+        index = get_index_by_value(header, key)
+        if not index:
+            raise DataError('Failed to obtain header value: {}'.format(key))
+        fields.required_fields[key] = index
+    ws_end = get_index_at_null(ws.collumns[0])
+    if not ws_end:
+        raise DataError('Failed to find end of the ws data')
+    # This skips the header row, as we are embedding all of the required data into dictionaries.
+    for row in ws.rows[1:ws_end]:
+        d = {key: row[index] for key, index in fields.required_fields.items()}
+        ret.append(d)
+    return ret
