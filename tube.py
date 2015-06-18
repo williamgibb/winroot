@@ -36,14 +36,14 @@ class Tube(object):
             if root.identity == existingRoot.identity:
                 insert = False
                 # If there was a change, update the root attributes
-                if existingRoot.isAlive.startswith('A') and root.isAlive.startswith('G'):
+                if existingRoot.isAlive.startswith('A') and root.isAlive.startswith(('G','D')):
                     # root changed from A to G
-                    log.debug('Changing root from A to G')
+                    log.debug('Changing root from A to {}'.format(root.isAlive))
                     existingRoot.goneSession = root.goneSession
                     existingRoot.isAlive = root.isAlive
-                elif existingRoot.isAlive.startswith('G') and root.isAlive.startswith('A'):
+                elif existingRoot.isAlive.startswith(('G','D')) and root.isAlive.startswith('A'):
                     # root changed from G to A
-                    log.debug('Changing root from G to A')
+                    log.debug('Changing root from {} to {}'.format(existingRoot.isAlive, root.isAlive))
                     existingRoot.goneSession = ''
                     existingRoot.isAlive = root.isAlive
         # add the root to the tube
@@ -67,3 +67,9 @@ class Tube(object):
                     existingRoot.censored = 0
                 finalized = True
         return finalized
+
+    def insert_synthesis_data(self, sdata):
+        for root_obj in self:
+            sd = sdata.get(root_obj.identity)
+            root_obj.aliveTipsAtBirth = sd.get('AliveTipsAtBirth')
+            root_obj.aliveTipsAtGone = sd.get('AliveTipsAtDeath')
