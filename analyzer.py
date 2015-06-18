@@ -142,9 +142,14 @@ class Analyzer(object):
         self._process_root_table(ws=root_sheet)
 
         if set(self.root_data.keys()) != set(self.synthesis_data.keys()):
+            log.error('# Root data keys [{}]'.format(len(self.root_data.keys())))
+            log.error('# Syn  data keys [{}]'.format(len(self.synthesis_data.keys())))
+            log.error(self.synthesis_data)
             raise DataError('Tube numbers from root_data does not match the tube numbers from the synthesis_data')
 
+        log.info('Processing collected data')
         for tn in self.root_data:
+            log.info('Processing data for tube [{}]'.format(tn))
             tube_obj = tube.Tube(tn)
             raw_roots = self.root_data.get(tn)
 
@@ -157,17 +162,17 @@ class Analyzer(object):
                     tube_obj.sessionDates[rsession] = root_obj.get('Date')
                     log.debug('Inserted session {} - Date {}'.format(rsession, root_obj.get('Date')))
             final_roots = []
-            log.debug('Inserting roots into tube [{}]'.format(tn))
+            log.info('Inserting roots into tube [{}]'.format(tn))
             for root_obj in raw_roots:
                 tube_obj.insert_or_update_root(root_obj)
                 if root_obj.get('Session#') == tube_obj.maxSessionCount:
                     final_roots.append(root_obj)
-            log.debug('Finalizing roots')
+            log.info('Finalizing roots')
             for root_obj in final_roots:
                 status = tube_obj.finalize_root(root_obj)
                 if not status:
                     log.error('Failed to finalize root {}'.format(root_obj.identity))
-
+            log.info('Inserting synthesis data')
             # Insert the sythesis data (containing the tip stats) into the roots.
             sdata = self.synthesis_data.get(tn)
             tube_obj.insert_synthesis_data(sdata)
