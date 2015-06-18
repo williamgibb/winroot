@@ -100,7 +100,7 @@ def build_data_from_fields(ws, fields):
         if index is False:
             raise DataError('Failed to obtain header value: {}'.format(key))
         header_index[key] = index
-    ws_end = len(ws.columns[0]) - 1
+    ws_end = len(ws.columns[0])
     if not ws_end:
         raise DataError('Failed to find end of the ws data')
     # This skips the header row, as we are embedding all of the required data into dictionaries.
