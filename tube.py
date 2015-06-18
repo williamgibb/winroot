@@ -68,9 +68,10 @@ class Tube(object):
                     existingRoot.censored = 0
                 finalized = True
         return finalized
-
     def insert_synthesis_data(self, sdata):
         for root_obj in self:
+            # log.debug('Inserting synthesis data for {}'.format(root_obj.identity))
             sd = sdata.get(root_obj.identity)
+            # log.debug(sd)
             for k, v in sd.items():
                 root_obj.set(k, v)
