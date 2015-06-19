@@ -195,7 +195,7 @@ class Analyzer(object):
             col = openpyxl.cell.get_column_letter(i)
             ws.cell('{x}{y}'.format(x=col, y=row_index)).value = v
 
-        row_index = row_index + 1
+        row_index += 1
         for tube_obj in self.tubes:
             log.info('Writing out data for tube [{}]'.format(tube_obj.tubeNumber))
             for root_obj in tube_obj:
@@ -207,7 +207,7 @@ class Analyzer(object):
                         v = self.synthesis_fields.required_attributes.get(v)
                     cv = getattr(root_obj, v, 'NO VALUE')
                     ws.cell('{x}{y}'.format(x=col, y=row_index)).value = cv
-                row_index = row_index + 1
+                row_index += 1
 
         wb.save(filename=fp)
         return True
