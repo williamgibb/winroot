@@ -1,6 +1,5 @@
-# XXX Fill out docstring!
 """
-
+Root container class.
 """
 from __future__ import print_function
 import collections

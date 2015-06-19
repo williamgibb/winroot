@@ -1,6 +1,5 @@
-# XXX Fill out docstring!
 """
-
+Stores the Synthesis and ROOT tab fields that we care about.
 """
 from __future__ import print_function
 import logging

@@ -1,6 +1,5 @@
-# XXX Fill out docstring!
 """
-
+Class for the tube.
 """
 from __future__ import print_function
 import logging
