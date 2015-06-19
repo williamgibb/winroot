@@ -169,7 +169,7 @@ class Analyzer(object):
                     final_roots.append(root_obj)
             log.info('Finalizing roots')
             for root_obj in final_roots:
-                status = tube_obj.finalize_root(root_obj)
+                status = tube_obj.finalize_root(root_obj, root_fields=self.root_fields)
                 if not status:
                     log.error('Failed to finalize root {}'.format(root_obj.identity))
             log.info('Inserting synthesis data')
@@ -239,7 +239,10 @@ def main(options):
             log.info('Exiting')
             sys.exit(-1)
 
-    analyzer = Analyzer()
+    # Unpack the custom fields into a mapping
+    fdict = {k: v for k, v in options.fields}
+
+    analyzer = Analyzer(additional_root_fields=fdict)
     analyzer.insert(options.src_file)
     analyzer.write(options.output)
 
@@ -253,6 +256,12 @@ def root_options():
                         help='Source xlsx file to process')
     parser.add_argument('-o', '--output', dest='output', required=True, type=str, action='store',
                         help='Define the output file (xlsx)')
+    parser.add_argument('-f', '--field', dest='fields', default=[], action='append', nargs=2,
+                        help='Define a custom field that is extracted.  This take two values.'
+                             ' The first value is the  column name from the ROOT table.  The'
+                             ' second value must be in [{b},{d}], indicating that the value '
+                             'is set at the birth or finalization of root.'.format(b=fields.ROOT_BIRTH,
+                                                                                   d=fields.ROOT_FINAL))
     parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
                         help='Enable verbose output')
     return parser

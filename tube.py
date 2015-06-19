@@ -4,6 +4,7 @@
 """
 from __future__ import print_function
 import logging
+import fields
 
 log = logging.getLogger(__name__)
 __author__ = 'wgibb'
@@ -54,7 +55,7 @@ class Tube(object):
             self.add_root(root)
         return True
 
-    def finalize_root(self, root_obj):
+    def finalize_root(self, root_obj, root_fields):
         finalized = False
         for existingRoot in self:
             if root_obj.identity == existingRoot.identity:
@@ -66,8 +67,15 @@ class Tube(object):
                 # XXX Icky!
                 if existingRoot.isAlive.startswith(('D', 'G')):
                     existingRoot.censored = 0
+                # Update custom fields which are set when the root is finalized
+                for attr, state in root_fields.additional_fields.items():
+                    if state != fields.ROOT_FINAL:
+                        continue
+                    existingRoot.set(attr, root_obj.get(attr))
                 finalized = True
+
         return finalized
+
     def insert_synthesis_data(self, sdata):
         for root_obj in self:
             # log.debug('Inserting synthesis data for {}'.format(root_obj.identity))

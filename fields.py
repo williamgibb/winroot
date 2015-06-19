@@ -7,12 +7,12 @@ import logging
 import re
 
 from errors import FieldsError
+
 log = logging.getLogger(__name__)
 __author__ = 'wgibb'
 
-
-ROOT_BIRTH = 1
-ROOT_DEATH = 2
+ROOT_BIRTH = 'BIRTH'
+ROOT_FINAL = 'FINAL'
 # XXX Move these into a class?
 digit_start = r'^[0-9]'
 valid_python_identifer = r'^[a-zA-Z_]+[a-zA-Z0-9_]*$'
@@ -65,9 +65,10 @@ class RootDataFields(IdentityFields):
         if additional_fields:
             self.additional_fields = additional_fields
             for k, v in self.additional_fields.items():
+                log.info('Preparing to extract custom field [{}]'.format(k))
                 if k in self.required_attributes:
                     raise FieldsError('Additional field duplicates a required field [{}]'.format(k))
-                if v not in [ROOT_BIRTH, ROOT_DEATH]:
+                if v not in [ROOT_BIRTH, ROOT_FINAL]:
                     raise FieldsError('Unknown custom field propogation value [{}][{}]'.format(k, v))
                 new_key = str(k)
                 if not re.search(valid_python_identifer, new_key):
