@@ -180,7 +180,7 @@ class Analyzer(object):
 
     def write(self, fp):
         if not self.tubes:
-            raise AnalyzerError('No tubes available to serialize data from')
+            raise SerializationError('No tubes available to serialize data from')
 
         header = sorted(self.root_fields.identity_attributes.keys())
         header.extend(sorted([k for k in self.root_fields.required_attributes.keys() if k not in header]))
