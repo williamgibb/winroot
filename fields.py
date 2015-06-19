@@ -47,7 +47,7 @@ class RootDataFields(IdentityFields):
                             'Date',
                             'Order']
 
-        self.required_attributes = {k:v for k, v in IdentityFields.identity_attributes.items()}
+        self.required_attributes = {k: v for k, v in IdentityFields.identity_attributes.items()}
 
         for k in self.base_fields:
             new_key = str(k)
@@ -84,7 +84,7 @@ class RootDataFields(IdentityFields):
 class SynthesisDataFields(IdentityFields):
     def __init__(self):
         self.synthesis_fields = ['AliveTipsAtBirth',
-                                'AliveTipsAtDeath',]
+                                 'AliveTipsAtDeath', ]
         self.required_attributes = {k: v for k, v in IdentityFields.identity_attributes.items()}
 
         for k in self.synthesis_fields:

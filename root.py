@@ -15,7 +15,7 @@ RootIdentity = collections.namedtuple('RootIdentity', ['rootname', 'location', '
 
 
 class Root(object):
-    fixed_attributes = ['isAlive', 'censored','highestOrder', 'anomaly']
+    fixed_attributes = ['isAlive', 'censored', 'highestOrder', 'anomaly']
 
     def __init__(self, attr_map, rootname, location, birthsession):
         self.attr_map = attr_map

@@ -28,15 +28,14 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(levelname)s: %(m
 log = logging.getLogger(__name__)
 
 
-
 class Analyzer(object):
     def __init__(self,
                  additional_root_fields=None,
                  required_sheet_names=None):
         self.root_fields = fields.RootDataFields(additional_fields=additional_root_fields)
         self.synthesis_fields = fields.SynthesisDataFields()
-        self.required_sheet_names = {'root_data':'ROOT',
-                                     'synthesis_data': 'Synthesis',}
+        self.required_sheet_names = {'root_data': 'ROOT',
+                                     'synthesis_data': 'Synthesis', }
 
         if required_sheet_names:
             for key in ['root_data', 'synthesis_data']:
@@ -44,10 +43,9 @@ class Analyzer(object):
                     raise AnalyzerError('Missing key in required_sheet_names - [{}]'.format(key))
             self.required_sheet_names = required_sheet_names
 
-        self.root_data = {} # Tube number -> list of roots from that tube.
-        self.synthesis_data = {} # tube number -> rootidentity -> data
-        self.tubes = [] # List of tube objects
-
+        self.root_data = {}  # Tube number -> list of roots from that tube.
+        self.synthesis_data = {}  # tube number -> rootidentity -> data
+        self.tubes = []  # List of tube objects
 
     def insert(self, fp):
         log.info('Opening workbook [{}]'.format(fp))
@@ -124,7 +122,7 @@ class Analyzer(object):
             root_obj.set(k, d.get(k))
         # Check to see if the current root is gone
         # XXX Configurable value!
-        if root_obj.isAlive.startswith(('D','G')):
+        if root_obj.isAlive.startswith(('D', 'G')):
             # XXX Eww hardcorded attribute access!
             root_obj.DeathSession = root_obj.get('Session#')
         # Now we add arbitrary keys to the root.

@@ -37,12 +37,12 @@ class Tube(object):
             if root.identity == existingRoot.identity:
                 insert = False
                 # If there was a change, update the root attributes
-                if existingRoot.isAlive.startswith('A') and root.isAlive.startswith(('G','D')):
+                if existingRoot.isAlive.startswith('A') and root.isAlive.startswith(('G', 'D')):
                     # root changed from A to G
                     log.debug('Changing root from A to {}'.format(root.isAlive))
                     existingRoot.set('DeathSession', root.get('DeathSession'))
                     existingRoot.isAlive = root.isAlive
-                elif existingRoot.isAlive.startswith(('G','D')) and root.isAlive.startswith('A'):
+                elif existingRoot.isAlive.startswith(('G', 'D')) and root.isAlive.startswith('A'):
                     # root changed from G to A
                     log.debug('Changing root from {} to {}'.format(existingRoot.isAlive, root.isAlive))
                     existingRoot.set('DeathSession', '')
