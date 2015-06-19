@@ -186,7 +186,6 @@ class Analyzer(object):
         header.extend(sorted([k for k in root.Root.fixed_attributes if k not in header]))
         log.debug('Header row is {}'.format(header))
 
-
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
         ws.title = 'Compiled Data'  # XXX Custom title?
@@ -211,6 +210,7 @@ class Analyzer(object):
 
         wb.save(filename=fp)
         return True
+
 
 #
 # Main program functions
