@@ -185,12 +185,9 @@ class Analyzer(object):
         header = sorted(self.root_fields.identity_attributes.keys())
         header.extend(sorted([k for k in self.root_fields.required_attributes.keys() if k not in header]))
         header.extend(sorted([k for k in self.synthesis_fields.required_attributes.keys() if k not in header]))
+        header.extend(sorted([k for k in root.Root.fixed_attributes if k not in header]))
         log.debug('Header row is {}'.format(header))
-        # XXX Header needs to be extended to support the following values:
-        # isAlive
-        # censored
-        # highestOrder
-        # anomaly
+
 
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
@@ -207,10 +204,10 @@ class Analyzer(object):
                 for i, v in enumerate(header, 1):
                     col = openpyxl.cell.get_column_letter(i)
                     if v in self.root_fields.required_attributes:
-                        attr = self.root_fields.required_attributes.get(v)
+                        v = self.root_fields.required_attributes.get(v)
                     elif v in self.synthesis_fields.required_attributes:
-                        attr = self.synthesis_fields.required_attributes.get(v)
-                    cv = getattr(root_obj, attr, 'NO VALUE')
+                        v = self.synthesis_fields.required_attributes.get(v)
+                    cv = getattr(root_obj, v, 'NO VALUE')
                     ws.cell('{x}{y}'.format(x=col, y=row_index)).value = cv
                 row_index = row_index + 1
 
