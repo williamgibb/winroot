@@ -30,5 +30,5 @@ class Root(object):
         setattr(self, new_key, value)
 
     def get(self, key, default=None):
-        new_key = self.attr_map.get(key, default)
+        new_key = self.attr_map.get(key)
         return getattr(self, new_key, default)
