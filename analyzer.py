@@ -191,6 +191,7 @@ class Analyzer(object):
         ws.title = 'Compiled Data'  # XXX Custom title?
         row_index = 1
         for i, v in enumerate(header, 1):
+            # noinspection PyUnresolvedReferences
             col = openpyxl.cell.get_column_letter(i)
             ws.cell('{x}{y}'.format(x=col, y=row_index)).value = v
 
@@ -199,6 +200,7 @@ class Analyzer(object):
             log.info('Writing out data for tube [{}]'.format(tube_obj.tubeNumber))
             for root_obj in tube_obj:
                 for i, v in enumerate(header, 1):
+                    # noinspection PyUnresolvedReferences
                     col = openpyxl.cell.get_column_letter(i)
                     if v in self.root_fields.required_attributes:
                         v = self.root_fields.required_attributes.get(v)
